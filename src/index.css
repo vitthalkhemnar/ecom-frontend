@@ -439,6 +439,126 @@ button { font-family: inherit; cursor: pointer; }
   text-align: center;
 }
 
+.auth-page {
+  min-height: calc(100vh - 76px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.auth-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
+.auth-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate);
+  margin-bottom: 16px;
+}
+
+.auth-input {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+
+.auth-input:focus-visible {
+  border-color: var(--mango);
+}
+
+.auth-submit {
+  width: 100%;
+  background: var(--ink);
+  color: var(--sand);
+  border: none;
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+  font-size: 13px;
+}
+
+.auth-links a:hover {
+  color: var(--mango-deep);
+}
+
+.auth-error {
+  background: rgba(196, 67, 43, 0.1);
+  color: var(--rust);
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.auth-note {
+  font-size: 13.5px;
+  color: var(--slate);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.header-auth {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13.5px;
+}
+
+.header-username {
+  color: var(--sand);
+}
+
+.header-logout,
+.header-login-link {
+  background: transparent;
+  border: 1px solid var(--sand);
+  color: var(--sand);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.header-logout:hover,
+.header-login-link:hover {
+  background: var(--sand);
+  color: var(--ink);
+}
+
 .variant-stock.in { background: rgba(63,125,88,0.12); color: var(--leaf); }
 .variant-stock.low { background: rgba(232,135,30,0.14); color: var(--mango-deep); }
 .variant-stock.out { background: rgba(196,67,43,0.12); color: var(--rust); }

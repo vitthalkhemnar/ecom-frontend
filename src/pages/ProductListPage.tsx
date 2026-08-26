@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import ProductCard from '../components/ProductCard';
 import { getProducts } from '../api';
 import type { Product } from '../types';
@@ -9,10 +10,11 @@ export default function ProductListPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const { token } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
-    getProducts()
+    getProducts(token!)
       .then((data) => {
         if (!cancelled) {
           setProducts(data);
@@ -25,7 +27,7 @@ export default function ProductListPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [token]);
 
   const categories = useMemo(() => {
     const set = new Set(products.map((p) => p.category));

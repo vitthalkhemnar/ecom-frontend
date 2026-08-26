@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import VariantCard from '../components/VariantCard';
 import { getProducts, getVariants, formatINR } from '../api';
 import type { Product, Variant } from '../types';
@@ -11,13 +12,14 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [status, setStatus] = useState<Status>('loading');
+  const { token } = useAuth();
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     setStatus('loading');
 
-    Promise.all([getProducts(), getVariants(id)])
+    Promise.all([getProducts(token!), getVariants(id, token!)])
       .then(([products, variantData]) => {
         if (cancelled) return;
         const match = products.find((p) => String(p.id) === String(id));
@@ -32,7 +34,7 @@ export default function ProductDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, token]);
 
   if (status === 'loading') {
     return (
