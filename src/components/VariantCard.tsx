@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { formatINR } from '../api';
+import { useCart } from '../context/CartContext';
 import type { Variant } from '../types';
 
 interface VariantCardProps {
@@ -15,6 +17,28 @@ function stockInfo(stock: number, active: boolean): { label: string; cls: 'in' |
 export default function VariantCard({ variant }: VariantCardProps) {
   const { label, cls } = stockInfo(variant.stock, variant.active);
   const swatchLabel = variant.color ? variant.color.slice(0, 3).toUpperCase() : 'STD';
+  const { addItem } = useCart();
+  const [quantity, setQuantity] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const outOfStock = cls === 'out';
+
+  async function handleAddToCart() {
+    setAdding(true);
+    try {
+      await addItem({
+        productId: String(variant.productId),
+        variantId: String(variant.variantId),
+        price: variant.price,
+        quantity,
+      });
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+    } finally {
+      setAdding(false);
+    }
+  }
 
   return (
     <div className="variant-card">
@@ -33,6 +57,19 @@ export default function VariantCard({ variant }: VariantCardProps) {
       </div>
       <span className={`variant-stock ${cls}`}>{label}</span>
       <span className="variant-price">{formatINR(variant.price)}</span>
+
+      {!outOfStock && (
+        <div className="variant-cart-controls">
+          <div className="qty-stepper">
+            <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
+            <span>{quantity}</span>
+            <button type="button" onClick={() => setQuantity((q) => Math.min(variant.stock, q + 1))} aria-label="Increase quantity">+</button>
+          </div>
+          <button type="button" className="add-to-cart-btn" onClick={handleAddToCart} disabled={adding}>
+            {added ? 'Added' : adding ? 'Adding…' : 'Add to cart'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest } from './types';
+import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest } from './types';
 
 const AUTH_BASE_URL = 'http://localhost:9090';
 const PRODUCT_BASE_URL = 'http://localhost:9091';
@@ -61,4 +61,26 @@ export function formatINR(value: number | null | undefined): string {
     currency: 'INR',
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+export function addToCart(payload: AddToCartRequest, token: string): Promise<CartItem[]> {
+  return request<CartItem[]>(PRODUCT_BASE_URL, '/cart/add', {
+    method: 'POST',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function removeFromCart(payload: RemoveFromCartRequest, token: string): Promise<CartItem[]> {
+  return request<CartItem[]>(PRODUCT_BASE_URL, '/cart/remove', {
+    method: 'DELETE',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getCart(token: string): Promise<CartItem[]> {
+  return request<CartItem[]>(PRODUCT_BASE_URL, '/cart', {
+    headers: authHeader(token),
+  });
 }

@@ -44,3 +44,24 @@ export interface Variant {
   image: string | null;
   active: boolean;
 }
+
+export interface CartItem {
+  productId: string;
+  variantId: string;
+  price: number;
+  quantity: number;
+}
+
+export interface AddToCartRequest {
+  productId: string;
+  variantId: string;
+  price: number;
+  quantity: number;
+}
+
+export interface RemoveFromCartRequest {
+  productId: string;
+  variantId: string;
+  price: number;
+  quantity: number;
+}
