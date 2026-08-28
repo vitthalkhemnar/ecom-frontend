@@ -1,7 +1,8 @@
-import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest } from './types';
+import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order } from './types';
 
 const AUTH_BASE_URL = 'http://localhost:9090';
 const PRODUCT_BASE_URL = 'http://localhost:9091';
+const ORDER_BASE_URL = 'http://localhost:9092';
 
 async function request<T>(baseUrl: string, path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, {
@@ -81,6 +82,26 @@ export function removeFromCart(payload: RemoveFromCartRequest, token: string): P
 
 export function getCart(token: string): Promise<CartItem[]> {
   return request<CartItem[]>(PRODUCT_BASE_URL, '/cart', {
+    headers: authHeader(token),
+  });
+}
+
+export function createOrder(payload: CreateOrderRequest, token: string): Promise<Order> {
+  return request<Order>(ORDER_BASE_URL, '/orders/create', {
+    method: 'POST',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getOrders(token: string): Promise<Order[]> {
+  return request<Order[]>(ORDER_BASE_URL, '/orders', {
+    headers: authHeader(token),
+  });
+}
+
+export function getOrderById(id: number | string, token: string): Promise<Order> {
+  return request<Order>(ORDER_BASE_URL, `/orders/${id}`, {
     headers: authHeader(token),
   });
 }

@@ -9,6 +9,9 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import CartIcon from './components/CartIcon.tsx';
 import { CartProvider } from './context/CartContext.tsx';
 import CartPage from './pages/CartPage.tsx';
+import OrdersIcon from './components/OrdersIcon.tsx';
+import OrdersListPage from './pages/OrdersListPage.tsx';
+import OrderDetailPage from './pages/OrderDetailPage.tsx';
 
 function Header() {
   const { isAuthenticated, username, logout } = useAuth();
@@ -18,6 +21,7 @@ function Header() {
       <span className="tagline">everything, in one aisle</span>
       <div className="header-auth">
         {isAuthenticated && <CartIcon />}
+        {isAuthenticated && <OrdersIcon />}
         {isAuthenticated ? (
           <>
             <span className="header-username">Hi, {username}</span>
@@ -44,6 +48,8 @@ function App() {
             <Route path="/" element={<ProtectedRoute><ProductListPage /></ProtectedRoute>} />
             <Route path="/product/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><OrdersListPage /></ProtectedRoute>} />
+            <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </CartProvider>

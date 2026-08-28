@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { getProducts, getVariants, formatINR } from '../api';
-import type { Product, Variant } from '../types';
+import { getProducts, getVariants, formatINR, createOrder } from '../api';
+import type { CreateOrderItem, Product, Variant } from '../types';
 
 export default function CartPage() {
   const { items, totalPrice, refreshCart, addItem, removeItem } = useCart();
@@ -11,6 +11,9 @@ export default function CartPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [variantsByProduct, setVariantsByProduct] = useState<Record<string, Variant[]>>({});
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     refreshCart();
@@ -66,6 +69,44 @@ export default function CartPage() {
     } finally {
       setUpdatingKey(null);
     }
+  }
+
+  async function handleCheckout() {
+   if (!token || items.length === 0) return;
+   setCheckingOut(true);
+   setCheckoutError(null);
+   try {
+     const orderItems: CreateOrderItem[] = items.map((item) => {
+       const product = findProduct(item.productId);
+       const variant = findVariant(item.productId, item.variantId);
+       return {
+         productId: item.productId,
+         variantId: item.variantId,
+         productName: product?.productName ?? `Product #${item.productId}`,
+         size: variant?.size ?? '',
+         color: variant?.color ?? '',
+         quantity: String(item.quantity),
+         priceAtBooking: String(item.price),
+       };
+     });
+  
+     const order = await createOrder(
+       { totalAmount: totalPrice.toFixed(2), items: orderItems },
+       token
+     );
+  
+     await Promise.all(
+       items.map((item) =>
+         removeItem({ productId: item.productId, variantId: item.variantId, price: item.price, quantity: item.quantity })
+       )
+     );
+  
+     navigate(`/orders/${order.bookingId}`);
+   } catch {
+     setCheckoutError('Could not place your order. Please try again.');
+   } finally {
+     setCheckingOut(false);
+   }
   }
 
   return (
@@ -145,6 +186,10 @@ export default function CartPage() {
             <span>Total</span>
             <span>{formatINR(totalPrice)}</span>
           </div>
+          {checkoutError && <p className="auth-error">{checkoutError}</p>}
+          <button type="button" className="checkout-btn" onClick={handleCheckout} disabled={checkingOut}>
+            {checkingOut ? 'Placing order…' : 'Checkout'}
+          </button>
         </>
       )}
     </div>

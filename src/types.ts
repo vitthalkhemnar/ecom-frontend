@@ -65,3 +65,31 @@ export interface RemoveFromCartRequest {
   price: number;
   quantity: number;
 }
+
+export interface CreateOrderItem {
+  productId: string;
+  variantId: string;
+  productName: string;
+  size: string;
+  color: string;
+  quantity: string;
+  priceAtBooking: string;
+}
+
+export interface OrderItem extends CreateOrderItem {
+  bookingItemId: number;
+}
+
+export interface CreateOrderRequest {
+  totalAmount: string;
+  items: CreateOrderItem[];
+}
+
+export interface Order {
+  bookingId: number;
+  username: string;
+  status: string;
+  totalAmount: string;
+  createdAt: string;
+  items: OrderItem[];
+}
