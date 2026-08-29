@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext.tsx';
 
 export default function SignupPage() {
   const [username, setUsername] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -18,7 +20,7 @@ export default function SignupPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const data = await register({ username, email, phone, password });
+      const data = await register({ username, firstName, lastName, email, phone, password });
       setAuth(data);
       navigate('/');
     } catch {
@@ -33,10 +35,16 @@ export default function SignupPage() {
       <form className="auth-card" onSubmit={handleSubmit}>
         <h1 className="auth-title">Create an account</h1>
         {error && <p className="auth-error">{error}</p>}
-        <label className="auth-label">
-          Username
-          <input className="auth-input" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        </label>
+        <div className="auth-field-row">
+          <label className="auth-label">
+            First name
+            <input className="auth-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+          </label>
+          <label className="auth-label">
+            Last name
+            <input className="auth-input" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+          </label>
+        </div>
         <label className="auth-label">
           Email
           <input className="auth-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -44,6 +52,10 @@ export default function SignupPage() {
         <label className="auth-label">
           Phone
           <input className="auth-input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+        </label>
+        <label className="auth-label">
+          Username
+          <input className="auth-input" value={username} onChange={(e) => setUsername(e.target.value)} required />
         </label>
         <label className="auth-label">
           Password

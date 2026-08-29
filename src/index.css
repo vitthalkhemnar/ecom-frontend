@@ -439,6 +439,8 @@ button { font-family: inherit; cursor: pointer; }
   text-align: center;
 }
 
+/* Auth pages (login/signup/forgot-password) */
+
 .auth-page {
   min-height: calc(100vh - 76px);
   display: flex;
@@ -453,7 +455,7 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: 4px;
   padding: 32px 28px;
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
 }
 
 .auth-title {
@@ -530,6 +532,18 @@ button { font-family: inherit; cursor: pointer; }
   margin-bottom: 18px;
 }
 
+.auth-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.auth-field-row .auth-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Header ---------- */
+
 .header-auth {
   margin-left: auto;
   display: flex;
@@ -558,6 +572,64 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--sand);
   color: var(--ink);
 }
+
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--sand);
+  color: var(--sand);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.user-menu-trigger:hover {
+  background: var(--sand);
+  color: var(--ink);
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 170px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 24px rgba(23, 32, 58, 0.15);
+  z-index: 10;
+}
+
+.user-menu-dropdown button {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  color: var(--ink);
+  border-radius: 4px;
+}
+
+.user-menu-dropdown button:hover {
+  background: var(--sand);
+}
+
+.user-menu-logout {
+  color: var(--rust) !important;
+}
+
+/* ---------- Cart page ---------- */
 
 .cart-icon {
   position: relative;
@@ -763,6 +835,8 @@ button { font-family: inherit; cursor: pointer; }
   opacity: 0.6;
 }
 
+/* ---------- Order list page ---------- */
+
 .order-list {
   display: grid;
   gap: 10px;
@@ -813,4 +887,96 @@ button { font-family: inherit; cursor: pointer; }
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+/* ---------- Profile page ---------- */
+
+.profile-card {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  max-width: 480px;
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.profile-banner {
+  height: 88px;
+  background: var(--ink);
+  border-bottom: 3px solid var(--mango);
+}
+
+.profile-avatar {
+  position: absolute;
+  top: 44px;
+  left: 28px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--mango);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid var(--paper);
+}
+
+.profile-identity {
+  padding: 56px 28px 24px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.profile-email {
+  font-size: 13.5px;
+  color: var(--slate);
+}
+
+.profile-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 28px 28px;
+}
+
+.profile-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.profile-field:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.profile-field-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--slate);
+  font-weight: 600;
+}
+
+.profile-field-value {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink);
+  font-family: var(--font-mono);
 }

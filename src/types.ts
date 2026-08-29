@@ -10,6 +10,8 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   username: string;
+  firstName: string;
+  lastName: string;
   password: string;
   email: string;
   phone: string;
@@ -92,4 +94,13 @@ export interface Order {
   totalAmount: string;
   createdAt: string;
   items: OrderItem[];
+}
+
+export interface User {
+  id: number,
+  username: string,
+  firstName: string,
+  lastName: string,
+  email: string,
+  phone: string,
 }

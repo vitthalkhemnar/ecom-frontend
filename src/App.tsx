@@ -9,24 +9,23 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import CartIcon from './components/CartIcon.tsx';
 import { CartProvider } from './context/CartContext.tsx';
 import CartPage from './pages/CartPage.tsx';
-import OrdersIcon from './components/OrdersIcon.tsx';
 import OrdersListPage from './pages/OrdersListPage.tsx';
 import OrderDetailPage from './pages/OrderDetailPage.tsx';
 import { Toaster } from 'react-hot-toast';
+import UserMenu from './components/UserMenu.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
 
 function Header() {
-  const { isAuthenticated, username, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   return (
     <header className="site-header">
       <Link to="/" className="wordmark">Bazaar</Link>
       <span className="tagline">everything, in one aisle</span>
       <div className="header-auth">
-        {isAuthenticated && <CartIcon />}
-        {isAuthenticated && <OrdersIcon />}
         {isAuthenticated ? (
           <>
-            <span className="header-username">Hi, {username}</span>
-            <button className="header-logout" onClick={logout}>Log out</button>
+            <CartIcon />
+            <UserMenu />
           </>
         ) : (
           <Link to="/login" className="header-login-link">Log in</Link>
@@ -52,6 +51,7 @@ function App() {
             <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><OrdersListPage /></ProtectedRoute>} />
             <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </CartProvider>
