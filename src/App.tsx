@@ -12,6 +12,7 @@ import CartPage from './pages/CartPage.tsx';
 import OrdersIcon from './components/OrdersIcon.tsx';
 import OrdersListPage from './pages/OrdersListPage.tsx';
 import OrderDetailPage from './pages/OrderDetailPage.tsx';
+import { Toaster } from 'react-hot-toast';
 
 function Header() {
   const { isAuthenticated, username, logout } = useAuth();
@@ -39,6 +40,7 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
+        <Toaster position='top-center'></Toaster>
         <BrowserRouter>
           <Header />
           <Routes>

@@ -4,6 +4,13 @@ const AUTH_BASE_URL = 'http://localhost:9090';
 const PRODUCT_BASE_URL = 'http://localhost:9091';
 const ORDER_BASE_URL = 'http://localhost:9092';
 
+type UnauthorizedHandler = () => void;
+let onUnauthorized: UnauthorizedHandler | null = null;
+
+export function registerUnauthorizedHandler(handler: UnauthorizedHandler) {
+  onUnauthorized = handler;
+}
+
 async function request<T>(baseUrl: string, path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, {
     ...options,
@@ -12,6 +19,12 @@ async function request<T>(baseUrl: string, path: string, options?: RequestInit):
       ...(options?.headers || {}),
     },
   });
+
+  if (res.status === 401 || res.status === 403) {
+    onUnauthorized?.();
+    throw new Error('Session expired');
+  }
+
   if (!res.ok) {
     throw new Error(`Request to ${path} failed with status ${res.status}`);
   }

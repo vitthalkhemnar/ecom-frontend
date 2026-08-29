@@ -1,5 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { AuthResponse } from '../types';
+import { registerUnauthorizedHandler } from '../api';
+import toast from 'react-hot-toast';
 
 interface AuthState {
   token: string | null;
@@ -20,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = sessionStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : { token: null, username: null };
   });
+  const loggingOutRef = useRef(false);
 
   useEffect(() => {
     if (auth.token) {
@@ -29,7 +32,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [auth]);
 
+  useEffect(() => {
+    registerUnauthorizedHandler(() => {
+      if(loggingOutRef.current) return;
+      loggingOutRef.current = true;
+      toast.error("Session expired. Please log in again.");
+      logout();
+    });
+  }, []);
+
   function setAuth(data: AuthResponse) {
+    loggingOutRef.current = false;
     setAuthState({ token: data.token, username: data.username });
   }
 
