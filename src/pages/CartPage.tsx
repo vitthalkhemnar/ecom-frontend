@@ -95,11 +95,9 @@ export default function CartPage() {
        token
      );
   
-     await Promise.all(
-       items.map((item) =>
-         removeItem({ productId: item.productId, variantId: item.variantId, price: item.price, quantity: item.quantity })
-       )
-     );
+     for (const item of items) {
+      await removeItem({ productId: item.productId, variantId: item.variantId, price: item.price, quantity: item.quantity });
+     }
   
      navigate(`/orders/${order.bookingId}`);
    } catch {
