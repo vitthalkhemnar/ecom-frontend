@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function UserMenu() {
-  const { username, logout } = useAuth();
+  const { username, logout, isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -45,6 +45,9 @@ export default function UserMenu() {
         <div className="user-menu-dropdown">
           <button type="button" onClick={() => go('/profile')}>Profile</button>
           <button type="button" onClick={() => go('/orders')}>Order history</button>
+          {isAdmin && (
+            <button type="button" onClick={() => go('/admin')}>Admin dashboard</button>
+          )}
           <button type="button" className="user-menu-logout" onClick={handleLogout}>Log out</button>
         </div>
       )}

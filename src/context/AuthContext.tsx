@@ -6,10 +6,12 @@ import toast from 'react-hot-toast';
 interface AuthState {
   token: string | null;
   username: string | null;
+  roles: string[];
 }
 
 interface AuthContextValue extends AuthState {
   isAuthenticated: boolean;
+  isAdmin: boolean;
   setAuth: (data: AuthResponse) => void;
   logout: () => void;
 }
@@ -20,7 +22,7 @@ const STORAGE_KEY = 'bazaar_auth';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuthState] = useState<AuthState>(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : { token: null, username: null };
+    return stored ? JSON.parse(stored) : { token: null, username: null, roles: [] };
   });
   const loggingOutRef = useRef(false);
 
@@ -37,21 +39,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if(loggingOutRef.current) return;
       loggingOutRef.current = true;
       toast.error("Session expired. Please log in again.");
-      logout();
+      setAuthState({ token: null, username: null , roles: []});
     });
   }, []);
 
   function setAuth(data: AuthResponse) {
     loggingOutRef.current = false;
-    setAuthState({ token: data.token, username: data.username });
+    setAuthState({ token: data.token, username: data.username, roles: data.roles });
   }
 
   function logout() {
-    setAuthState({ token: null, username: null });
+    setAuthState({ token: null, username: null , roles: []});
   }
 
   return (
-    <AuthContext.Provider value={{ ...auth, isAuthenticated: !!auth.token, setAuth, logout }}>
+    <AuthContext.Provider value={{ ...auth, isAuthenticated: !!auth.token, isAdmin: auth.roles.includes('ROLE_ADMIN'), setAuth, logout }}>
       {children}
     </AuthContext.Provider>
   );

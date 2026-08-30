@@ -1,6 +1,7 @@
 export interface AuthResponse {
   token: string;
   username: string;
+  roles: string[];
 }
 
 export interface LoginRequest {
@@ -103,4 +104,15 @@ export interface User {
   lastName: string,
   email: string,
   phone: string,
+  isAdmin: boolean
+}
+
+export interface UserUpdateRequest {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  isAdmin: boolean;
 }

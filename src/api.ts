@@ -1,4 +1,4 @@
-import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User } from './types';
+import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest } from './types';
 
 const AUTH_BASE_URL = 'http://localhost:9090';
 const PRODUCT_BASE_URL = 'http://localhost:9091';
@@ -121,6 +121,27 @@ export function getOrderById(id: number | string, token: string): Promise<Order>
 
 export function getUserDetails(token: string): Promise<User[]> {
   return request<User[]>(AUTH_BASE_URL, '/user', {
+    headers: authHeader(token),
+  });
+}
+
+export function getAdminUsers(token: string): Promise<User[]> {
+  return request<User[]>(AUTH_BASE_URL, '/admin/users', {
+    headers: authHeader(token),
+  });
+}
+
+export function updateUser(payload: UserUpdateRequest, token: string): Promise<User> {
+  return request<User>(AUTH_BASE_URL, '/admin/user', {
+    method: 'PUT',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteUser(id: number, token: string): Promise<boolean> {
+  return request<boolean>(AUTH_BASE_URL, `/admin/user/${id}`, {
+    method: 'DELETE',
     headers: authHeader(token),
   });
 }

@@ -14,6 +14,8 @@ import OrderDetailPage from './pages/OrderDetailPage.tsx';
 import { Toaster } from 'react-hot-toast';
 import UserMenu from './components/UserMenu.tsx';
 import ProfilePage from './pages/ProfilePage.tsx';
+import AdminRoute from './components/AdminRoute.tsx';
+import AdminDashboardPage from './pages/AdminDashboardPage.tsx';
 
 function Header() {
   const { isAuthenticated } = useAuth();
@@ -52,6 +54,7 @@ function App() {
             <Route path="/orders" element={<ProtectedRoute><OrdersListPage /></ProtectedRoute>} />
             <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
           </Routes>
         </BrowserRouter>
       </CartProvider>
