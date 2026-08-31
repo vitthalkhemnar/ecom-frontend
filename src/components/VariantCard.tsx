@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { formatINR } from '../api';
 import { useCart } from '../context/CartContext';
 import type { Variant } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface VariantCardProps {
   variant: Variant;
@@ -21,6 +22,7 @@ export default function VariantCard({ variant }: VariantCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const outOfStock = cls === 'out';
 
@@ -58,7 +60,7 @@ export default function VariantCard({ variant }: VariantCardProps) {
       <span className={`variant-stock ${cls}`}>{label}</span>
       <span className="variant-price">{formatINR(variant.price)}</span>
 
-      {!outOfStock && (
+      {!outOfStock && isAuthenticated && (
         <div className="variant-cart-controls">
           <div className="qty-stepper">
             <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
