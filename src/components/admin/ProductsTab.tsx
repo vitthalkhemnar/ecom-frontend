@@ -100,7 +100,20 @@ export default function ProductsTab() {
   if (status === 'error') return <p className="state-msg error">Couldn't load products.</p>;
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
+      {/* Full-Screen Blocking Loader Overlay using index.css classes */}
+      {uploading && (
+        <div className="upload-overlay">
+          <div className="upload-spinner" />
+          <div className="upload-title">
+            Uploading and processing products...
+          </div>
+          <div className="upload-subtitle">
+            Please do not refresh or leave the site.
+          </div>
+        </div>
+      )}
+
       {/* CSV Bulk Upload Section */}
       <div className="auth-card" style={{ maxWidth: '100%', margin: '0 0 24px 0', padding: '20px' }}>
         <h3 className="section-label" style={{ paddingTop: 0, borderTop: 'none', fontSize: '17px', marginBottom: '8px' }}>
@@ -122,7 +135,7 @@ export default function ProductsTab() {
               disabled={!file || uploading}
               style={{ width: 'auto', padding: '10px 20px', margin: 0 }}
             >
-              {uploading ? 'Uploading...' : 'Upload CSV'}
+              Upload CSV
             </button>
           </div>
           {file && (
