@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import UsersTab from '../components/admin/UsersTab';
+import ProductsTab from '../components/admin/ProductsTab';
 
 type Tab = 'users' | 'products';
 
@@ -28,7 +29,7 @@ export default function AdminDashboardPage() {
         </nav>
         <div className="admin-content">
           {tab === 'users' && <UsersTab />}
-          {tab === 'products' && <p className="state-msg">Product management goes here.</p>}
+          {tab === 'products' && <ProductsTab />}
         </div>
       </div>
     </div>

@@ -126,13 +126,13 @@ export function getUserDetails(token: string): Promise<User[]> {
 }
 
 export function getAdminUsers(token: string): Promise<User[]> {
-  return request<User[]>(AUTH_BASE_URL, '/admin/users', {
+  return request<User[]>(AUTH_BASE_URL, '/user/all-users', {
     headers: authHeader(token),
   });
 }
 
 export function updateUser(payload: UserUpdateRequest, token: string): Promise<User> {
-  return request<User>(AUTH_BASE_URL, '/admin/user', {
+  return request<User>(AUTH_BASE_URL, '/user', {
     method: 'PUT',
     headers: authHeader(token),
     body: JSON.stringify(payload),
@@ -140,7 +140,62 @@ export function updateUser(payload: UserUpdateRequest, token: string): Promise<U
 }
 
 export function deleteUser(id: number, token: string): Promise<boolean> {
-  return request<boolean>(AUTH_BASE_URL, `/admin/user/${id}`, {
+  return request<boolean>(AUTH_BASE_URL, `/user/${id}`, {
+    method: 'DELETE',
+    headers: authHeader(token),
+  });
+}
+
+export function uploadProducts(file: File, token: string): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return fetch(`${PRODUCT_BASE_URL}/product/upload`, {
+    method: 'POST',
+    headers: {
+      ...authHeader(token),
+      // Note: Do NOT set 'Content-Type': 'application/json' when sending FormData,
+      // as fetch needs to automatically set the multipart/boundary header.
+    },
+    body: formData,
+  }).then(async (res) => {
+    if (res.status === 401 || res.status === 403) {
+      onUnauthorized?.();
+      throw new Error('Session expired');
+    }
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(text || `Upload failed with status ${res.status}`);
+    }
+    return text;
+  });
+}
+
+export function updateProduct(payload: Product, token: string): Promise<Product> {
+  return request<Product>(PRODUCT_BASE_URL, `/product/${payload.id}`, {
+    method: 'PUT',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteProduct(id: number | string, token: string): Promise<boolean> {
+  return request<boolean>(PRODUCT_BASE_URL, `/product/${id}`, {
+    method: 'DELETE',
+    headers: authHeader(token),
+  });
+}
+
+export function updateVariant(variantId: number | string, payload: Partial<Variant>, token: string): Promise<Variant> {
+  return request<Variant>(PRODUCT_BASE_URL, `/variant/${variantId}`, {
+    method: 'PUT',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteVariant(variantId: number | string, token: string): Promise<boolean> {
+  return request<boolean>(PRODUCT_BASE_URL, `/variant/${variantId}`, {
     method: 'DELETE',
     headers: authHeader(token),
   });
