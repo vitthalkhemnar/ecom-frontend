@@ -172,7 +172,7 @@ export function uploadProducts(file: File, token: string): Promise<string> {
 }
 
 export function updateProduct(payload: Product, token: string): Promise<Product> {
-  return request<Product>(PRODUCT_BASE_URL, `/product/${payload.id}`, {
+  return request<Product>(PRODUCT_BASE_URL, `/product`, {
     method: 'PUT',
     headers: authHeader(token),
     body: JSON.stringify(payload),
@@ -186,8 +186,8 @@ export function deleteProduct(id: number | string, token: string): Promise<boole
   });
 }
 
-export function updateVariant(variantId: number | string, payload: Partial<Variant>, token: string): Promise<Variant> {
-  return request<Variant>(PRODUCT_BASE_URL, `/variant/${variantId}`, {
+export function updateVariant(payload: Partial<Variant>, token: string): Promise<Variant> {
+  return request<Variant>(PRODUCT_BASE_URL, `/variant`, {
     method: 'PUT',
     headers: authHeader(token),
     body: JSON.stringify(payload),

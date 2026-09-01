@@ -23,6 +23,7 @@ export default function ProductRow({ product, token, onSave, onDelete }: Product
   const [editColor, setEditColor] = useState('');
   const [editPrice, setEditPrice] = useState(0);
   const [editStock, setEditStock] = useState(0);
+  const [editActive, setEditActive] = useState(false);
 
   // Editable product fields form state
   const [productName, setProductName] = useState(product.productName);
@@ -73,15 +74,18 @@ export default function ProductRow({ product, token, onSave, onDelete }: Product
     setEditColor(v.color || '');
     setEditPrice(v.price);
     setEditStock(v.stock);
+    setEditActive(v.active);
   }
 
   async function handleSaveVariant(variantId: number) {
     try {
-      const updated = await updateVariant(variantId, {
+      const updated = await updateVariant({
+        variantId: variantId,
         size: editSize || null,
         color: editColor || null,
         price: Number(editPrice),
         stock: Number(editStock),
+        active: editActive || false
       }, token);
       setVariants((prev) => prev.map((v) => (v.variantId === variantId ? updated : v)));
       setEditingVariantId(null);
