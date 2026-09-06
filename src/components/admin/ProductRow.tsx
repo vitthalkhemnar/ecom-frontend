@@ -8,9 +8,10 @@ interface ProductRowProps {
   token: string;
   onSave: (payload: Product) => Promise<void>;
   onDelete: (product: Product) => Promise<void>;
+  onVariantsEmptied: () => void;
 }
 
-export default function ProductRow({ product, token, onSave, onDelete }: ProductRowProps) {
+export default function ProductRow({ product, token, onSave, onDelete, onVariantsEmptied }: ProductRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [loadingVariants, setLoadingVariants] = useState(false);
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -99,9 +100,15 @@ export default function ProductRow({ product, token, onSave, onDelete }: Product
     if (!window.confirm('Delete this variant? This cannot be undone.')) return;
     try {
       const success = await deleteVariant(variantId, token);
-      if (success !== false) {
-        setVariants((prev) => prev.filter((v) => v.variantId !== variantId));
+      if (success) {
+        const remaining = variants.filter((v) => v.variantId !== variantId);
+        setVariants(remaining);
         toast.success('Variant deleted.');
+  
+        if (remaining.length === 0) {
+          toast.success('Product removed — no variants left.');
+          onVariantsEmptied();
+        }
       } else {
         toast.error('Delete did not succeed.');
       }

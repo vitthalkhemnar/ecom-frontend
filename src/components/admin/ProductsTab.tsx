@@ -96,6 +96,16 @@ export default function ProductsTab() {
     }
   }
 
+  async function handleVariantsEmptied() {
+    if (!token) return;
+    try {
+      const data = await getProducts(token);
+      setProducts(data);
+    } catch {
+      toast.error('Product list may be out of date — refresh to see the latest.');
+    }
+  }
+
   if (status === 'loading') return <p className="state-msg">Loading products…</p>;
   if (status === 'error') return <p className="state-msg error">Couldn't load products.</p>;
 
@@ -173,6 +183,7 @@ export default function ProductsTab() {
               token={token!}
               onSave={handleSave}
               onDelete={handleDelete}
+              onVariantsEmptied={handleVariantsEmptied}
             />
           ))}
         </div>
