@@ -116,3 +116,8 @@ export interface UserUpdateRequest {
   phone: string;
   isAdmin: boolean;
 }
+
+export interface SendMailRequest {
+  to: string;
+  data: Record<string, unknown>;
+}

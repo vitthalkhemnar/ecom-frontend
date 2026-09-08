@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { getProducts, getVariants, formatINR, createOrder } from '../api';
+import { getProducts, getVariants, formatINR, createOrder, sendMail, getUserDetails } from '../api';
 import type { CreateOrderItem, Product, Variant } from '../types';
+import toast from 'react-hot-toast';
 
 export default function CartPage() {
   const { items, totalPrice, refreshCart, addItem, removeItem } = useCart();
@@ -94,6 +95,36 @@ export default function CartPage() {
        { totalAmount: totalPrice.toFixed(2), items: orderItems },
        token
      );
+
+    const userDetails = await getUserDetails(token);
+    const user = Array.isArray(userDetails) ? userDetails[0] : userDetails;
+    if (user?.email) {
+      sendMail(
+        {
+          to: user.email,
+          data: {
+            bookingId: order.bookingId,
+            username: order.username,
+            status: order.status,
+            totalAmount: order.totalAmount,
+            orderDate: new Date(order.createdAt).toLocaleString('en-IN', {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            }),
+            items: order.items.map((item) => ({
+              productName: item.productName,
+              variant: [item.color, item.size].filter(Boolean).join(' · ') || 'Standard',
+              quantity: item.quantity,
+              priceAtBooking: item.priceAtBooking,
+              lineTotal: (Number(item.priceAtBooking) * Number(item.quantity)).toFixed(2),
+            })),
+          },
+        },
+        token
+      ).catch((error) => {
+        toast.error('Failed to send order confirmation email', error);
+      });
+    }
   
      for (const item of items) {
       await removeItem({ productId: item.productId, variantId: item.variantId, price: item.price, quantity: item.quantity });

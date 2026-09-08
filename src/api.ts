@@ -1,8 +1,9 @@
-import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest } from './types';
+import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest, SendMailRequest } from './types';
 
 const AUTH_BASE_URL = 'http://localhost:9090';
 const PRODUCT_BASE_URL = 'http://localhost:9091';
 const ORDER_BASE_URL = 'http://localhost:9092';
+const EMAIL_BASE_URL = 'http://localhost:9093';
 
 type UnauthorizedHandler = () => void;
 let onUnauthorized: UnauthorizedHandler | null = null;
@@ -198,5 +199,13 @@ export function deleteVariant(variantId: number | string, token: string): Promis
   return request<boolean>(PRODUCT_BASE_URL, `/variant/${variantId}`, {
     method: 'DELETE',
     headers: authHeader(token),
+  });
+}
+
+export function sendMail(payload: SendMailRequest, token: string) {
+  return request<boolean>(EMAIL_BASE_URL, `/email`, {
+    method: 'POST',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
   });
 }
