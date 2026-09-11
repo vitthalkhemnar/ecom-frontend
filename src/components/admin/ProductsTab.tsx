@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { getProducts, uploadProducts, updateProduct, deleteProduct } from '../../api';
-import ProductRow from './ProductRow';
+import EditProductModal from './EditProductModal';
+import VariantsModal from './VariantsModal';
 import type { Product } from '../../types';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -14,8 +15,9 @@ export default function ProductsTab() {
   const [status, setStatus] = useState<Status>('loading');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [variantsProduct, setVariantsProduct] = useState<Product | null>(null);
 
-  // File upload state
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -111,20 +113,14 @@ export default function ProductsTab() {
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Full-Screen Blocking Loader Overlay using index.css classes */}
       {uploading && (
         <div className="upload-overlay">
           <div className="upload-spinner" />
-          <div className="upload-title">
-            Uploading and processing products...
-          </div>
-          <div className="upload-subtitle">
-            Please do not refresh or leave the site.
-          </div>
+          <div className="upload-title">Uploading and processing products...</div>
+          <div className="upload-subtitle">Please do not refresh or leave the site.</div>
         </div>
       )}
 
-      {/* CSV Bulk Upload Section */}
       <div className="auth-card" style={{ maxWidth: '100%', margin: '0 0 24px 0', padding: '20px' }}>
         <h3 className="section-label" style={{ paddingTop: 0, borderTop: 'none', fontSize: '17px', marginBottom: '8px' }}>
           Bulk Product Upload (CSV)
@@ -156,7 +152,6 @@ export default function ProductsTab() {
         </form>
       </div>
 
-      {/* Controls: Search & Sort */}
       <div className="admin-controls">
         <input
           className="auth-input admin-search"
@@ -171,22 +166,71 @@ export default function ProductsTab() {
         </select>
       </div>
 
-      {/* Product List View */}
       {visibleProducts.length === 0 ? (
         <p className="state-msg">No products match "{search}".</p>
       ) : (
-        <div className="admin-user-list">
-          {visibleProducts.map((product) => (
-            <ProductRow
-              key={product.id}
-              product={product}
-              token={token!}
-              onSave={handleSave}
-              onDelete={handleDelete}
-              onVariantsEmptied={handleVariantsEmptied}
-            />
-          ))}
-        </div>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Brand</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleProducts.map((product) => (
+              <tr key={product.id}>
+                <td>
+                  <div className="admin-thumb">
+                    {product.images && product.images.length > 0 ? (
+                      <img src={product.images[0]} alt={product.productName} />
+                    ) : (
+                      <span>{product.category?.[0] || 'P'}</span>
+                    )}
+                  </div>
+                </td>
+                <td>
+                  <div>{product.productName}</div>
+                  <div className="admin-cell-muted" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                    {product.productCode}
+                  </div>
+                </td>
+                <td className="admin-cell-muted">{product.brand}</td>
+                <td className="admin-cell-muted">{product.category}</td>
+                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>₹{product.price}</td>
+                <td>
+                  <div className="admin-row-actions">
+                    <button type="button" className="admin-edit-btn" onClick={() => setVariantsProduct(product)}>
+                      Variants
+                    </button>
+                    <button type="button" className="admin-edit-btn" onClick={() => setEditingProduct(product)}>
+                      Edit
+                    </button>
+                    <button type="button" className="admin-delete-btn" onClick={() => handleDelete(product)}>
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {editingProduct && (
+        <EditProductModal product={editingProduct} onSave={handleSave} onClose={() => setEditingProduct(null)} />
+      )}
+
+      {variantsProduct && token && (
+        <VariantsModal
+          product={variantsProduct}
+          token={token}
+          onClose={() => setVariantsProduct(null)}
+          onVariantsEmptied={handleVariantsEmptied}
+        />
       )}
     </div>
   );

@@ -573,7 +573,6 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--ink);
 }
 
-
 .user-menu {
   position: relative;
 }
@@ -1025,99 +1024,44 @@ button { font-family: inherit; cursor: pointer; }
   min-height: 300px;
 }
 
-.admin-user-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
 }
 
-.admin-user-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 14px 16px;
-  transition: border-color 0.15s;
-}
-
-.admin-user-row:hover {
-  border-color: var(--ink);
-}
-
-.admin-user-row.editing {
-  border-color: var(--mango);
-  align-items: flex-start;
-}
-
-.admin-user-avatar {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--ink);
-  color: var(--sand);
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.admin-user-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.admin-user-name-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.admin-user-name {
-  font-family: var(--font-display);
-  font-size: 15.5px;
-  font-weight: 600;
-}
-
-.admin-user-username {
-  font-family: var(--font-mono);
-  font-size: 12px;
+.admin-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--slate);
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
 }
 
-.admin-user-contact {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  color: var(--ink-soft);
+.admin-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
 }
 
-.admin-user-dot {
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover td {
+  background: var(--sand);
+}
+
+.admin-cell-muted {
   color: var(--slate);
-}
-
-.admin-user-edit-fields {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .admin-name-inputs {
   display: flex;
   gap: 8px;
-}
-
-.admin-user-edit-fields .auth-input {
-  padding: 7px 10px;
-  font-size: 13px;
 }
 
 .admin-role-toggle {
@@ -1194,6 +1138,77 @@ button { font-family: inherit; cursor: pointer; }
   font-family: var(--font-body);
   color: var(--ink);
   background: var(--paper);
+}
+
+/* ---------- Admin edit modal (simple, labeled inputs) ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 32, 58, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--paper);
+  border-radius: 8px;
+  padding: 28px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
+.modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.modal-fields .auth-input:disabled {
+  background: var(--sand);
+  color: var(--slate);
+  cursor: not-allowed;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.admin-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-card-wide {
+  max-width: 640px;
 }
 
 /* ---------- Full-Screen Upload Overlay & Spinner ---------- */
