@@ -4,9 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import { getAdminUsers, updateUser, deleteUser } from '../../api';
 import type { User, UserUpdateRequest } from '../../types';
 import EditUserModal from './EditUserDetail';
+import Pagination from './Pagination';
 
 type Status = 'loading' | 'ready' | 'error';
 type SortKey = 'name' | 'username' | 'role';
+
+const PAGE_SIZE = 10;
 
 export default function UsersTab() {
   const { token, username: currentUsername } = useAuth();
@@ -15,6 +18,7 @@ export default function UsersTab() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -25,6 +29,10 @@ export default function UsersTab() {
       })
       .catch(() => setStatus('error'));
   }, [token]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search, sortKey]);
 
   const visibleUsers = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -38,8 +46,16 @@ export default function UsersTab() {
       if (sortKey === 'name') return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
       if (sortKey === 'username') return a.username.localeCompare(b.username);
       return Number(b.isAdmin) - Number(a.isAdmin);
-    });
+    }).slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
   }, [users, search, sortKey]);
+
+  const totalPages = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const count = term
+      ? users.filter((u) => `${u.firstName} ${u.lastName} ${u.username} ${u.email}`.toLowerCase().includes(term)).length
+      : users.length;
+    return Math.max(1, Math.ceil(count / PAGE_SIZE));
+  }, [users, search]);
 
   async function handleSave(payload: UserUpdateRequest) {
     if (!token) return;
@@ -134,6 +150,7 @@ export default function UsersTab() {
           </tbody>
         </table>
       )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       {editingUser && (
         <EditUserModal user={editingUser} onSave={handleSave} onClose={() => setEditingUser(null)} />

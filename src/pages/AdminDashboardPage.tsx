@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import UsersTab from '../components/admin/UsersTab';
 import ProductsTab from '../components/admin/ProductsTab';
+import OrdersTab from '../components/admin/OrdersTab';
 
-type Tab = 'users' | 'products';
+type Tab = 'users' | 'products' | 'orders';
 
 export default function AdminDashboardPage() {
   const [tab, setTab] = useState<Tab>('users');
@@ -26,10 +27,18 @@ export default function AdminDashboardPage() {
           >
             Product management
           </button>
+          <button
+            type="button"
+            className={`admin-tab ${tab === 'orders' ? 'active' : ''}`}
+            onClick={() => setTab('orders')}
+          >
+            Order management
+          </button>
         </nav>
         <div className="admin-content">
           {tab === 'users' && <UsersTab />}
           {tab === 'products' && <ProductsTab />}
+          {tab === 'orders' && <OrdersTab />}
         </div>
       </div>
     </div>

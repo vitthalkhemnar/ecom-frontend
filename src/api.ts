@@ -114,6 +114,12 @@ export function getOrders(token: string): Promise<Order[]> {
   });
 }
 
+export function getAllOrders(token: string): Promise<Order[]> {
+  return request<Order[]>(ORDER_BASE_URL, '/orders/all-orders', {
+    headers: authHeader(token),
+  });
+}
+
 export function getOrderById(id: number | string, token: string): Promise<Order> {
   return request<Order>(ORDER_BASE_URL, `/orders/${id}`, {
     headers: authHeader(token),

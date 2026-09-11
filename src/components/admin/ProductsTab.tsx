@@ -5,9 +5,12 @@ import { getProducts, uploadProducts, updateProduct, deleteProduct } from '../..
 import EditProductModal from './EditProductModal';
 import VariantsModal from './VariantsModal';
 import type { Product } from '../../types';
+import Pagination from './Pagination';
 
 type Status = 'loading' | 'ready' | 'error';
 type SortKey = 'name' | 'brand' | 'price';
+
+const PAGE_SIZE = 10;
 
 export default function ProductsTab() {
   const { token } = useAuth();
@@ -21,6 +24,8 @@ export default function ProductsTab() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [page, setPage] = useState(0);
 
   const fetchProducts = async () => {
     if (!token) return;
@@ -37,6 +42,10 @@ export default function ProductsTab() {
     fetchProducts();
   }, [token]);
 
+  useEffect(() => {
+    setPage(0);
+  }, [search, sortKey]);
+
   const visibleProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
     const filtered = term
@@ -49,8 +58,16 @@ export default function ProductsTab() {
       if (sortKey === 'name') return a.productName.localeCompare(b.productName);
       if (sortKey === 'brand') return a.brand.localeCompare(b.brand);
       return a.price - b.price;
-    });
-  }, [products, search, sortKey]);
+    }).slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  }, [products, search, sortKey, page]);
+
+  const totalPages = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const count = term
+      ? products.filter((p) => `${p.productName} ${p.brand} ${p.category} ${p.productCode}`.toLowerCase().includes(term)).length
+      : products.length;
+    return Math.max(1, Math.ceil(count / PAGE_SIZE));
+  }, [products, search]);
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
@@ -219,6 +236,7 @@ export default function ProductsTab() {
           </tbody>
         </table>
       )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       {editingProduct && (
         <EditProductModal product={editingProduct} onSave={handleSave} onClose={() => setEditingProduct(null)} />

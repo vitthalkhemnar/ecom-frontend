@@ -1211,6 +1211,82 @@ button { font-family: inherit; cursor: pointer; }
   max-width: 640px;
 }
 
+.order-section-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.order-section-card {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.order-section-row .order-section-card {
+  margin-bottom: 0;
+}
+
+.order-section-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px 20px;
+  font-size: 13.5px;
+  align-items: center;
+}
+
+.order-detail-key {
+  color: var(--slate);
+}
+
+.modal-order-total {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.admin-pagination button {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.admin-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ---------- Full-Screen Upload Overlay & Spinner ---------- */
 
 .upload-overlay {
