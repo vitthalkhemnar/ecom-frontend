@@ -51,7 +51,7 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--sand);
   padding: 20px 32px;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 14px;
   border-bottom: 3px solid var(--mango);
 }
@@ -73,6 +73,62 @@ button { font-family: inherit; cursor: pointer; }
   max-width: 1180px;
   margin: 0 auto;
   padding: 32px 24px 80px;
+}
+
+.header-search {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 20px;
+}
+
+.header-search-input {
+  width: 100%;
+  border: 1px solid rgba(245, 241, 231, 0.25);
+  background: rgba(245, 241, 231, 0.08);
+  color: var(--sand);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-family: var(--font-body);
+}
+
+.header-search-input::placeholder {
+  color: rgba(245, 241, 231, 0.55);
+}
+
+.header-search-input:focus-visible {
+  outline: 2px solid var(--mango);
+  background: rgba(245, 241, 231, 0.14);
+}
+
+.chip-icon {
+  margin-right: 6px;
+}
+
+.location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--slate);
+  margin-bottom: 16px;
+}
+
+.location-badge svg {
+  color: var(--mango-deep);
+  flex-shrink: 0;
+}
+
+.modal-login-btn {
+  background: var(--ink);
+  color: var(--sand);
+  border: none;
+  border-radius: 4px;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
 }
 
 /* ---------- Product grid page ---------- */
