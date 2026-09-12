@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../context/SearchContext';
 import ProductCard from '../components/ProductCard';
-import LoginPromptModal from '../components/LoginPromptModal';
 import LocationBadge from '../components/LocationBadge';
 import { getProducts } from '../api';
 import type { Product } from '../types';
@@ -16,8 +15,7 @@ export default function HomePage() {
   const [status, setStatus] = useState<Status>();
   const [activeCategory, setActiveCategory] = useState('All');
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
-  const [promptDismissed, setPromptDismissed] = useState(false);
-  const { token, isAuthenticated } = useAuth();
+  const { token } = useAuth();
   const { searchTerm } = useSearch();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -111,10 +109,6 @@ export default function HomePage() {
             <p className="state-msg" style={{ padding: '20px 0' }}>Loading more…</p>
           )}
         </>
-      )}
-
-      {!isAuthenticated && !promptDismissed && (
-        <LoginPromptModal onClose={() => setPromptDismissed(true)} />
       )}
     </div>
   );

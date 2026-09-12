@@ -22,7 +22,7 @@ export default function ProfilePage() {
 
   return (
     <div className="page">
-      <h1 className="detail-title">Your profile</h1>
+      {/* <h1 className="detail-title">Your profile</h1> */}
 
       {status === 'loading' && <p className="state-msg">Loading profile…</p>}
       {status === 'error' && <p className="state-msg error">Couldn't load your profile.</p>}
