@@ -1,4 +1,4 @@
-import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest, SendMailRequest } from './types';
+import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest, SendMailRequest, AddAddressRequest, AddressResponse, UpdateAddressRequest } from './types';
 
 const AUTH_BASE_URL = 'http://localhost:9090';
 const PRODUCT_BASE_URL = 'http://localhost:9091';
@@ -29,7 +29,13 @@ async function request<T>(baseUrl: string, path: string, options?: RequestInit):
   if (!res.ok) {
     throw new Error(`Request to ${path} failed with status ${res.status}`);
   }
-  return res.json() as Promise<T>;
+
+  const text = await res.text();
+  if (!text) {
+    return undefined as unknown as T;
+  }
+
+  return JSON.parse(text) as Promise<T>;
 }
 
 function authHeader(token: string): HeadersInit {
@@ -209,8 +215,38 @@ export function deleteVariant(variantId: number | string, token: string): Promis
 }
 
 export function sendMail(payload: SendMailRequest, token: string) {
-  return request<boolean>(EMAIL_BASE_URL, `/email`, {
+  return request<void>(EMAIL_BASE_URL, `/email`, {
     method: 'POST',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function addAddress(payload: AddAddressRequest, token: string) {
+  return request<AddressResponse[]>(AUTH_BASE_URL, `/address`, {
+    method: 'POST',
+    headers: authHeader(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getAllAddress(token: string) {
+  return request<AddressResponse[]>(AUTH_BASE_URL, `/address`, {
+    method: 'GET',
+    headers: authHeader(token),
+  });
+}
+
+export function deleteAddress(addressId: number, token: string) {
+  return request<AddressResponse[]>(AUTH_BASE_URL, `/address/${addressId}`, {
+    method: 'DELETE',
+    headers: authHeader(token),
+  });
+}
+
+export function updateAddress(payload: UpdateAddressRequest, token: string) {
+  return request<AddressResponse[]>(AUTH_BASE_URL, `/address`, {
+    method: 'PUT',
     headers: authHeader(token),
     body: JSON.stringify(payload),
   });

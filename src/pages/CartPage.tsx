@@ -52,6 +52,23 @@ export default function CartPage() {
     return variantsByProduct[productId]?.find((v) => String(v.variantId) === variantId);
   }
 
+  function getOrderItems() : CreateOrderItem[] {
+    const orderItems: CreateOrderItem[] = items.map((item) => {
+       const product = findProduct(item.productId);
+       const variant = findVariant(item.productId, item.variantId);
+       return {
+         productId: item.productId,
+         variantId: item.variantId,
+         productName: product?.productName ?? `Product #${item.productId}`,
+         size: variant?.size ?? '',
+         color: variant?.color ?? '',
+         quantity: String(item.quantity),
+         priceAtBooking: String(item.price),
+       };
+     });
+     return orderItems;
+  }
+
   async function handleIncrease(productId: string, variantId: string, price: number) {
     const key = `${productId}-${variantId}`;
     setUpdatingKey(key);
@@ -70,72 +87,6 @@ export default function CartPage() {
     } finally {
       setUpdatingKey(null);
     }
-  }
-
-  async function handleCheckout() {
-   if (!token || items.length === 0) return;
-   setCheckingOut(true);
-   setCheckoutError(null);
-   try {
-     const orderItems: CreateOrderItem[] = items.map((item) => {
-       const product = findProduct(item.productId);
-       const variant = findVariant(item.productId, item.variantId);
-       return {
-         productId: item.productId,
-         variantId: item.variantId,
-         productName: product?.productName ?? `Product #${item.productId}`,
-         size: variant?.size ?? '',
-         color: variant?.color ?? '',
-         quantity: String(item.quantity),
-         priceAtBooking: String(item.price),
-       };
-     });
-  
-     const order = await createOrder(
-       { totalAmount: totalPrice.toFixed(2), items: orderItems },
-       token
-     );
-
-    const userDetails = await getUserDetails(token);
-    const user = Array.isArray(userDetails) ? userDetails[0] : userDetails;
-    if (user?.email) {
-      sendMail(
-        {
-          to: user.email,
-          data: {
-            bookingId: order.bookingId,
-            username: order.username,
-            status: order.status,
-            totalAmount: order.totalAmount,
-            orderDate: new Date(order.createdAt).toLocaleString('en-IN', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            }),
-            items: order.items.map((item) => ({
-              productName: item.productName,
-              variant: [item.color, item.size].filter(Boolean).join(' · ') || 'Standard',
-              quantity: item.quantity,
-              priceAtBooking: item.priceAtBooking,
-              lineTotal: (Number(item.priceAtBooking) * Number(item.quantity)).toFixed(2),
-            })),
-          },
-        },
-        token
-      ).catch((error) => {
-        toast.error('Failed to send order confirmation email', error);
-      });
-    }
-  
-     for (const item of items) {
-      await removeItem({ productId: item.productId, variantId: item.variantId, price: item.price, quantity: item.quantity });
-     }
-  
-     navigate(`/orders/${order.bookingId}`);
-   } catch {
-     setCheckoutError('Could not place your order. Please try again.');
-   } finally {
-     setCheckingOut(false);
-   }
   }
 
   return (
@@ -216,8 +167,9 @@ export default function CartPage() {
             <span>{formatINR(totalPrice)}</span>
           </div>
           {checkoutError && <p className="auth-error">{checkoutError}</p>}
-          <button type="button" className="checkout-btn" onClick={handleCheckout} disabled={checkingOut}>
-            {checkingOut ? 'Placing order…' : 'Checkout'}
+          <button type="button" className="checkout-btn" 
+            onClick={() => navigate('/checkout', { state: { orderItems: getOrderItems()}})} disabled={items.length === 0}>
+            Proceed to checkout
           </button>
         </>
       )}

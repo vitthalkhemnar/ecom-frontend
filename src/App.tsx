@@ -17,6 +17,7 @@ import AdminRoute from './components/AdminRoute.tsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.tsx';
 import { SearchProvider, useSearch } from './context/SearchContext.tsx';
 import HomePage from './pages/HomePage.tsx';
+import CheckoutAddressPage from './pages/CheckoutAddressPage.tsx';
 
 function Header() {
   const { isAuthenticated } = useAuth();
@@ -24,15 +25,17 @@ function Header() {
   return (
     <header className="site-header">
       <Link to="/" className="wordmark">Bazaar</Link>
-      <div className="header-search">
-        <input
-          className="header-search-input"
-          type="text"
-          placeholder="Search products, brands, categories…"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      {isAuthenticated && (
+        <div className="header-search">
+          <input
+            className="header-search-input"
+            type="text"
+            placeholder="Search products, brands, categories…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      )}
       <div className="header-auth">
         {isAuthenticated ? (
           <>
@@ -66,6 +69,7 @@ function App() {
               <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><CheckoutAddressPage /></ProtectedRoute>} />
             </Routes>
           </BrowserRouter>
         </CartProvider>

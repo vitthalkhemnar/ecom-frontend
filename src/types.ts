@@ -85,6 +85,7 @@ export interface OrderItem extends CreateOrderItem {
 
 export interface CreateOrderRequest {
   totalAmount: string;
+  addressId: number;
   items: CreateOrderItem[];
 }
 
@@ -93,6 +94,7 @@ export interface Order {
   username: string;
   status: string;
   totalAmount: string;
+  addressId: number;
   createdAt: string;
   items: OrderItem[];
 }
@@ -120,4 +122,33 @@ export interface UserUpdateRequest {
 export interface SendMailRequest {
   to: string;
   data: Record<string, unknown>;
+}
+
+export interface AddAddressRequest {
+  building: string;
+  area: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+}
+
+export interface UpdateAddressRequest {
+  addressId: number;
+  building: string;
+  area: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+}
+
+export interface AddressResponse {
+  addressId: number;
+  building: string;
+  area: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
 }

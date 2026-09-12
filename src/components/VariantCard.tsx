@@ -3,6 +3,7 @@ import { formatINR } from '../api';
 import { useCart } from '../context/CartContext';
 import type { Variant } from '../types';
 import { useAuth } from '../context/AuthContext';
+import AddToCartResultModal from './AddToCartResultModal';
 
 interface VariantCardProps {
   variant: Variant;
@@ -22,25 +23,27 @@ export default function VariantCard({ variant }: VariantCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [result, setResult] = useState<'success' | 'error' | null>(null);
   const { isAuthenticated } = useAuth();
 
   const outOfStock = cls === 'out';
 
   async function handleAddToCart() {
-    setAdding(true);
-    try {
-      await addItem({
-        productId: String(variant.productId),
-        variantId: String(variant.variantId),
-        price: variant.price,
-        quantity,
-      });
-      setAdded(true);
-      setTimeout(() => setAdded(false), 1500);
-    } finally {
-      setAdding(false);
-    }
+  setAdding(true);
+  try {
+    await addItem({
+      productId: String(variant.productId),
+      variantId: String(variant.variantId),
+      price: variant.price,
+      quantity,
+    });
+    setResult('success');
+  } catch {
+    setResult('error');
+  } finally {
+    setAdding(false);
   }
+}
 
   return (
     <div className="variant-card">
@@ -71,6 +74,14 @@ export default function VariantCard({ variant }: VariantCardProps) {
             {added ? 'Added' : adding ? 'Adding…' : 'Add to cart'}
           </button>
         </div>
+      )}
+      
+      {result && (
+        <AddToCartResultModal
+          status={result}
+          productName={`${variant.color || 'This item'}${variant.size ? ` (${variant.size})` : ''}`}
+          onClose={() => setResult(null)}
+        />
       )}
     </div>
   );
