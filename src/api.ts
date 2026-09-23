@@ -1,9 +1,10 @@
-import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest, SendMailRequest, AddAddressRequest, AddressResponse, UpdateAddressRequest } from './types';
+import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest, SendMailRequest, AddAddressRequest, AddressResponse, UpdateAddressRequest, RazorpayOrderResponse, PaymentVerificationRequest, PaymentOrderRequest } from './types';
 
 const AUTH_BASE_URL = 'http://localhost:9090';
 const PRODUCT_BASE_URL = 'http://localhost:9091';
 const ORDER_BASE_URL = 'http://localhost:9092';
 const EMAIL_BASE_URL = 'http://localhost:9093';
+const PAYMENT_BASE_URL = 'http://localhost:9094';
 
 type UnauthorizedHandler = () => void;
 let onUnauthorized: UnauthorizedHandler | null = null;
@@ -250,4 +251,34 @@ export function updateAddress(payload: UpdateAddressRequest, token: string) {
     headers: authHeader(token),
     body: JSON.stringify(payload),
   });
+}
+
+export function createPaymentOrder(
+  payload: PaymentOrderRequest,
+  token: string
+): Promise<RazorpayOrderResponse> {
+  return request<RazorpayOrderResponse>(
+    PAYMENT_BASE_URL,
+    '/payment/order',
+    {
+      method: 'POST',
+      headers: authHeader(token),
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export function verifyPayment(
+  payload: PaymentVerificationRequest,
+  token: string
+): Promise<boolean> {
+  return request<boolean>(
+    PAYMENT_BASE_URL,
+    '/payment/verify',
+    {
+      method: 'POST',
+      headers: authHeader(token),
+      body: JSON.stringify(payload),
+    }
+  );
 }

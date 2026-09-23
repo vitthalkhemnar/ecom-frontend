@@ -152,3 +152,27 @@ export interface AddressResponse {
   country: string;
   pincode: string;
 }
+
+export interface PaymentOrderRequest {
+  amount: number;
+  orderId: string | number;
+}
+
+export interface RazorpayOrderResponse {
+  id: string;
+  entity: string;
+  amount: number;
+  amount_paid: number;
+  amount_due: number;
+  currency: string;
+  receipt: string;
+  status: string;
+  attempts: number;
+  created_at: number;
+}
+
+export interface PaymentVerificationRequest {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+}
