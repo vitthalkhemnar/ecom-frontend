@@ -1,10 +1,12 @@
 import type { Product, Variant, AuthResponse, LoginRequest, RegisterRequest, AddToCartRequest, CartItem, RemoveFromCartRequest, CreateOrderRequest, Order, User, UserUpdateRequest, SendMailRequest, AddAddressRequest, AddressResponse, UpdateAddressRequest, RazorpayOrderResponse, PaymentVerificationRequest, PaymentOrderRequest } from './types';
 
-const AUTH_BASE_URL = 'http://localhost:9090';
-const PRODUCT_BASE_URL = 'http://localhost:9091';
-const ORDER_BASE_URL = 'http://localhost:9092';
-const EMAIL_BASE_URL = 'http://localhost:9093';
-const PAYMENT_BASE_URL = 'http://localhost:9094';
+const GATEWAY_URL = 'http://localhost:8080';
+
+const AUTH_BASE_URL = GATEWAY_URL + '/user-service';
+const PRODUCT_BASE_URL = GATEWAY_URL + '/product-service';
+const ORDER_BASE_URL = GATEWAY_URL + '/order-service';
+const EMAIL_BASE_URL = GATEWAY_URL + '/email-service';
+const PAYMENT_BASE_URL = GATEWAY_URL + '/payment-service';
 
 type UnauthorizedHandler = () => void;
 let onUnauthorized: UnauthorizedHandler | null = null;
