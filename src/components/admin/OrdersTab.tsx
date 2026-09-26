@@ -17,7 +17,7 @@ function statusClass(status: string): 'in' | 'low' | 'out' {
 }
 
 export default function OrdersTab() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [search, setSearch] = useState('');
@@ -26,14 +26,14 @@ export default function OrdersTab() {
   const [page, setPage] = useState(0);
 
   useEffect(() => {
-    if (!token) return;
-    getAllOrders(token)
+    if (!isAuthenticated) return;
+    getAllOrders()
       .then((data) => {
         setOrders(data);
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  }, [token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     setPage(0);

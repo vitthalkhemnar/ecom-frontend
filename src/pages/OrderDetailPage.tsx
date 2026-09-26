@@ -14,20 +14,20 @@ function statusClass(status: string): 'in' | 'low' | 'out' {
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<Status>('loading');
 
   useEffect(() => {
-    if (!token || !id) return;
+    if (!isAuthenticated || !id) return;
     setStatus('loading');
-    getOrderById(id, token)
+    getOrderById(id)
       .then((data) => {
         setOrder(data);
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  }, [id, token]);
+  }, [id, isAuthenticated]);
 
   if (status === 'loading') {
     return (

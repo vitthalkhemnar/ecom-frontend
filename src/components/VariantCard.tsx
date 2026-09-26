@@ -22,7 +22,6 @@ export default function VariantCard({ variant }: VariantCardProps) {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
-  const [added, setAdded] = useState(false);
   const [result, setResult] = useState<'success' | 'error' | null>(null);
   const { isAuthenticated } = useAuth();
 
@@ -71,7 +70,7 @@ export default function VariantCard({ variant }: VariantCardProps) {
             <button type="button" onClick={() => setQuantity((q) => Math.min(variant.stock, q + 1))} aria-label="Increase quantity">+</button>
           </div>
           <button type="button" className="add-to-cart-btn" onClick={handleAddToCart} disabled={adding}>
-            {added ? 'Added' : adding ? 'Adding…' : 'Add to cart'}
+            {adding ? 'Adding…' : 'Add to cart'}
           </button>
         </div>
       )}

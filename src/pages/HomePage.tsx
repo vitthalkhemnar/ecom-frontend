@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../context/SearchContext';
 import ProductCard from '../components/ProductCard';
 import LocationBadge from '../components/LocationBadge';
@@ -15,14 +14,13 @@ export default function HomePage() {
   const [status, setStatus] = useState<Status>();
   const [activeCategory, setActiveCategory] = useState('All');
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
-  const { token } = useAuth();
   const { searchTerm } = useSearch();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setStatus('loading');
-    getProducts(token!)
+    getProducts()
       .then((data) => {
         if (!cancelled) {
           setProducts(data);
@@ -35,7 +33,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, []);
 
   const categories = useMemo(() => {
     const set = new Set(products.map((p) => p.category));

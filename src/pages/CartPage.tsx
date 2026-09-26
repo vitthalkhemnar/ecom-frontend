@@ -2,38 +2,36 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { getProducts, getVariants, formatINR, createOrder, sendMail, getUserDetails } from '../api';
+import { getProducts, getVariants, formatINR } from '../api';
 import type { CreateOrderItem, Product, Variant } from '../types';
-import toast from 'react-hot-toast';
 
 export default function CartPage() {
   const { items, totalPrice, refreshCart, addItem, removeItem } = useCart();
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [variantsByProduct, setVariantsByProduct] = useState<Record<string, Variant[]>>({});
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
-  const [checkingOut, setCheckingOut] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [checkoutError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    refreshCart();
+    if (isAuthenticated) {
+      refreshCart();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    getProducts().then(setProducts).catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (token) {
-      getProducts(token).then(setProducts).catch(() => {});
-    }
-  }, [token]);
-
-  useEffect(() => {
-    if (!token || items.length === 0) return;
+    if (items.length === 0) return;
 
     const uniqueProductIds = Array.from(new Set(items.map((item) => item.productId)));
     const missing = uniqueProductIds.filter((id) => !(id in variantsByProduct));
     if (missing.length === 0) return;
 
-    Promise.all(missing.map((id) => getVariants(id, token).then((v) => [id, v] as const)))
+    Promise.all(missing.map((id) => getVariants(id).then((v) => [id, v] as const)))
       .then((results) => {
         setVariantsByProduct((prev) => {
           const next = { ...prev };
@@ -42,7 +40,7 @@ export default function CartPage() {
         });
       })
       .catch(() => {});
-  }, [items, token, variantsByProduct]);
+  }, [items, variantsByProduct]);
 
   function findProduct(productId: string): Product | undefined {
     return products.find((p) => String(p.id) === productId);

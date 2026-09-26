@@ -12,7 +12,7 @@ type SortKey = 'name' | 'username' | 'role';
 const PAGE_SIZE = 10;
 
 export default function UsersTab() {
-  const { token, username: currentUsername } = useAuth();
+  const { isAuthenticated, username: currentUsername } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [search, setSearch] = useState('');
@@ -21,14 +21,14 @@ export default function UsersTab() {
   const [page, setPage] = useState(0);
 
   useEffect(() => {
-    if (!token) return;
-    getAdminUsers(token)
+    if (!isAuthenticated) return;
+    getAdminUsers()
       .then((data) => {
         setUsers(data);
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  }, [token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     setPage(0);
@@ -58,9 +58,9 @@ export default function UsersTab() {
   }, [users, search]);
 
   async function handleSave(payload: UserUpdateRequest) {
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
-      const updated = await updateUser(payload, token);
+      const updated = await updateUser(payload);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       toast.success(`Updated ${updated.username}`);
     } catch {
@@ -70,10 +70,10 @@ export default function UsersTab() {
   }
 
   async function handleDelete(user: User) {
-    if (!token) return;
+    if (!isAuthenticated) return;
     if (!window.confirm(`Delete ${user.username}? This can't be undone.`)) return;
     try {
-      const success = await deleteUser(user.id, token);
+      const success = await deleteUser(user.id);
       if (success) {
         setUsers((prev) => prev.filter((u) => u.id !== user.id));
         toast.success(`Deleted ${user.username}`);

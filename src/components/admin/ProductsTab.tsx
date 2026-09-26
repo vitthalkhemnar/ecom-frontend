@@ -13,7 +13,7 @@ type SortKey = 'name' | 'brand' | 'price';
 const PAGE_SIZE = 10;
 
 export default function ProductsTab() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [search, setSearch] = useState('');
@@ -28,9 +28,9 @@ export default function ProductsTab() {
   const [page, setPage] = useState(0);
 
   const fetchProducts = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
-      const data = await getProducts(token);
+      const data = await getProducts();
       setProducts(data);
       setStatus('ready');
     } catch {
@@ -40,7 +40,7 @@ export default function ProductsTab() {
 
   useEffect(() => {
     fetchProducts();
-  }, [token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     setPage(0);
@@ -71,11 +71,11 @@ export default function ProductsTab() {
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
-    if (!token || !file) return;
+    if (!isAuthenticated || !file) return;
 
     setUploading(true);
     try {
-      const responseText = await uploadProducts(file, token);
+      const responseText = await uploadProducts(file);
       toast.success(responseText || 'Products Imported Successfully.');
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -88,9 +88,9 @@ export default function ProductsTab() {
   }
 
   async function handleSave(payload: Product) {
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
-      const updated = await updateProduct(payload, token);
+      const updated = await updateProduct(payload);
       setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
       toast.success(`Updated ${updated.productName}`);
     } catch {
@@ -100,10 +100,10 @@ export default function ProductsTab() {
   }
 
   async function handleDelete(product: Product) {
-    if (!token) return;
+    if (!isAuthenticated) return;
     if (!window.confirm(`Delete ${product.productName}? This can't be undone.`)) return;
     try {
-      const success = await deleteProduct(product.id, token);
+      const success = await deleteProduct(product.id);
       if (success !== false) {
         setProducts((prev) => prev.filter((p) => p.id !== product.id));
         toast.success(`Deleted ${product.productName}`);
@@ -116,9 +116,9 @@ export default function ProductsTab() {
   }
 
   async function handleVariantsEmptied() {
-    if (!token) return;
+    if (!isAuthenticated) return;
     try {
-      const data = await getProducts(token);
+      const data = await getProducts();
       setProducts(data);
     } catch {
       toast.error('Product list may be out of date — refresh to see the latest.');
@@ -242,10 +242,9 @@ export default function ProductsTab() {
         <EditProductModal product={editingProduct} onSave={handleSave} onClose={() => setEditingProduct(null)} />
       )}
 
-      {variantsProduct && token && (
+      {variantsProduct && (
         <VariantsModal
           product={variantsProduct}
-          token={token}
           onClose={() => setVariantsProduct(null)}
           onVariantsEmptied={handleVariantsEmptied}
         />

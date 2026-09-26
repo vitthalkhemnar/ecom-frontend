@@ -6,19 +6,19 @@ import type { User } from '../types';
 type Status = 'loading' | 'ready' | 'error';
 
 export default function ProfilePage() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<Status>('loading');
 
   useEffect(() => {
-    if (!token) return;
-    getUserDetails(token)
+    if (!isAuthenticated) return;
+    getUserDetails()
       .then((data) => {
         setUser(Array.isArray(data) ? data[0] : data);
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  }, [token]);
+  }, [isAuthenticated]);
 
   return (
     <div className="page">

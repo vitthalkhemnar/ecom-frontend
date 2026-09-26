@@ -8,19 +8,19 @@ import OrderCard from './OrderCard';
 type Status = 'loading' | 'ready' | 'error';
 
 export default function OrdersListPage() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState<Status>('loading');
 
   useEffect(() => {
-    if (!token) return;
-    getOrders(token)
+    if (!isAuthenticated) return;
+    getOrders()
       .then((data) => {
         setOrders(data);
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  }, [token]);
+  }, [isAuthenticated]);
 
   return (
     <div className="page">

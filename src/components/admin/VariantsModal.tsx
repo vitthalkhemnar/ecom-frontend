@@ -6,30 +6,29 @@ import type { Product, Variant } from '../../types';
 
 interface VariantsModalProps {
   product: Product;
-  token: string;
   onClose: () => void;
   onVariantsEmptied: () => void;
 }
 
 type Status = 'loading' | 'ready' | 'error';
 
-export default function VariantsModal({ product, token, onClose, onVariantsEmptied }: VariantsModalProps) {
+export default function VariantsModal({ product, onClose, onVariantsEmptied }: VariantsModalProps) {
   const [variants, setVariants] = useState<Variant[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
 
   useEffect(() => {
-    getVariants(product.id, token)
+    getVariants(product.id)
       .then((data) => {
         setVariants(data);
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  }, [product.id, token]);
+  }, [product.id]);
 
   async function handleSaveVariant(payload: Partial<Variant>) {
     try {
-      const updated = await updateVariant(payload, token);
+      const updated = await updateVariant(payload);
       setVariants((prev) => prev.map((v) => (v.variantId === updated.variantId ? updated : v)));
       toast.success('Variant updated.');
     } catch {
@@ -41,7 +40,7 @@ export default function VariantsModal({ product, token, onClose, onVariantsEmpti
   async function handleDeleteVariant(variantId: number) {
     if (!window.confirm('Delete this variant? This cannot be undone.')) return;
     try {
-      const success = await deleteVariant(variantId, token);
+      const success = await deleteVariant(variantId);
       if (success !== false) {
         const remaining = variants.filter((v) => v.variantId !== variantId);
         setVariants(remaining);

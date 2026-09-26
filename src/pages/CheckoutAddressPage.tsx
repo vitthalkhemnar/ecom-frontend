@@ -26,7 +26,7 @@ import type {
 type Status = "loading" | "ready" | "error";
 
 export default function CheckoutAddressPage() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { items, totalPrice, removeItem } = useCart();
 
   const [addresses, setAddresses] = useState<AddressResponse[]>([]);
@@ -44,9 +44,9 @@ export default function CheckoutAddressPage() {
   const orderItems: CreateOrderItem[] = location.state?.orderItems ?? [];
 
   useEffect(() => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
-    getAllAddress(token)
+    getAllAddress()
       .then((data) => {
         setAddresses(data);
 
@@ -57,18 +57,18 @@ export default function CheckoutAddressPage() {
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
-  }, [token]);
+  }, [isAuthenticated]);
 
   async function handleSaveAddress(
     payload: AddAddressRequest | UpdateAddressRequest,
   ) {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       const updated =
         "addressId" in payload
-          ? await updateAddress(payload, token)
-          : await addAddress(payload, token);
+          ? await updateAddress(payload)
+          : await addAddress(payload);
 
       setAddresses(updated);
 
@@ -84,12 +84,12 @@ export default function CheckoutAddressPage() {
   }
 
   async function handleDeleteAddress(addressId: number) {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     if (!window.confirm("Delete this address?")) return;
 
     try {
-      const updated = await deleteAddress(addressId, token);
+      const updated = await deleteAddress(addressId);
 
       setAddresses(updated);
 
@@ -104,14 +104,14 @@ export default function CheckoutAddressPage() {
   }
 
   async function handlePlaceOrder() {
-    if (!token || items.length === 0 || selectedId === null) {
+    if (!isAuthenticated || items.length === 0 || selectedId === null) {
       return;
     }
 
     setPlacingOrder(true);
 
     try {
-      const userDetails = await getUserDetails(token);
+      const userDetails = await getUserDetails();
       const user = Array.isArray(userDetails) ? userDetails[0] : userDetails;
 
       /*
@@ -121,26 +121,20 @@ export default function CheckoutAddressPage() {
        * This gives us the bookingId which will be passed
        * to the Razorpay payment service as orderId.
        */
-      const order = await createOrder(
-        {
-          totalAmount: totalPrice.toFixed(2),
-          addressId: selectedId,
-          items: orderItems,
-        },
-        token,
-      );
+      const order = await createOrder({
+        totalAmount: totalPrice.toFixed(2),
+        addressId: selectedId,
+        items: orderItems,
+      });
 
       /*
        * STEP 2
        * Create Razorpay order using the bookingId.
        */
-      const razorpayOrder = await createPaymentOrder(
-        {
-          amount: totalPrice,
-          orderId: order.bookingId,
-        },
-        token,
-      );
+      const razorpayOrder = await createPaymentOrder({
+        amount: totalPrice,
+        orderId: order.bookingId,
+      });
 
       /*
        * STEP 3
@@ -170,16 +164,13 @@ export default function CheckoutAddressPage() {
              * STEP 4
              * Verify Razorpay payment on backend.
              */
-            const isVerified = await verifyPayment(
-              {
-                razorpayOrderId: response.razorpay_order_id,
+            const isVerified = await verifyPayment({
+              razorpayOrderId: response.razorpay_order_id,
 
-                razorpayPaymentId: response.razorpay_payment_id,
+              razorpayPaymentId: response.razorpay_payment_id,
 
-                razorpaySignature: response.razorpay_signature,
-              },
-              token,
-            );
+              razorpaySignature: response.razorpay_signature,
+            });
 
             if (!isVerified) {
               toast.error("Payment verification failed.");
@@ -233,8 +224,7 @@ export default function CheckoutAddressPage() {
                         ).toFixed(2),
                       })),
                     },
-                  },
-                  token,
+                  }
                 );
               }
             } catch {

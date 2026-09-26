@@ -26,24 +26,36 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   async function refreshCart() {
-    if (!token) return;
-    const data = await getCart(token);
-    setItems(data);
+    if (!isAuthenticated) return;
+    try {
+      const data = await getCart();
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      // Avoid uncaught rejection
+    }
   }
 
   async function addItem(payload: AddToCartRequest) {
-    if (!token) return;
-    const data = await addToCart(payload, token);
-    setItems(data);
+    if (!isAuthenticated) return;
+    try {
+      const data = await addToCart(payload);
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      // Avoid uncaught rejection
+    }
   }
 
   async function removeItem(payload: RemoveFromCartRequest) {
-    if (!token) return;
-    const data = await removeFromCart(payload, token);
-    setItems(data);
+    if (!isAuthenticated) return;
+    try {
+      const data = await removeFromCart(payload);
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      // Avoid uncaught rejection
+    }
   }
 
   useEffect(() => {
