@@ -48,6 +48,33 @@ export interface Variant {
   active: boolean;
 }
 
+export interface CreateProductRequest {
+  id?: number;
+  productCode?: string;
+  productName: string;
+  brand: string;
+  category: string;
+  subcategory?: string;
+  description?: string;
+  price: number;
+  discount?: number;
+  material?: string;
+  attributes?: Record<string, string | number>;
+  images?: string[];
+  status?: string;
+}
+
+export interface CreateVariantRequest {
+  productId: number;
+  variantId?: number;
+  color?: string | null;
+  size?: string | null;
+  price?: number;
+  stock?: number;
+  image?: string | null;
+  active?: boolean;
+}
+
 export interface CartItem {
   productId: string;
   variantId: string;

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getVariants, updateVariant, deleteVariant } from '../../api';
+import { getVariants, updateVariant, deleteVariant, createVariant } from '../../api';
 import EditVariantModal from './EditVariantModal';
-import type { Product, Variant } from '../../types';
+import AddVariantModal from './AddVariantModal';
+import type { Product, Variant, CreateVariantRequest } from '../../types';
 
 interface VariantsModalProps {
   product: Product;
@@ -16,6 +17,7 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
   const [variants, setVariants] = useState<Variant[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
+  const [addingVariant, setAddingVariant] = useState(false);
 
   useEffect(() => {
     getVariants(product.id)
@@ -25,6 +27,18 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
       })
       .catch(() => setStatus('error'));
   }, [product.id]);
+
+  async function handleCreateVariant(payload: CreateVariantRequest) {
+    try {
+      const created = await createVariant(payload);
+      setVariants((prev) => [...prev, created]);
+      toast.success('Variant added successfully.');
+      return created;
+    } catch (err: any) {
+      toast.error(err.message || 'Could not add variant.');
+      throw err;
+    }
+  }
 
   async function handleSaveVariant(payload: Partial<Variant>) {
     try {
@@ -62,13 +76,33 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card modal-card-wide" onClick={(e) => e.stopPropagation()}>
-        <h2 className="modal-title">Variants — {product.productName}</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+          <h2 className="modal-title" style={{ margin: 0 }}>Variants — {product.productName}</h2>
+          <button
+            type="button"
+            className="auth-submit"
+            style={{ width: 'auto', margin: 0, padding: '8px 16px', fontSize: '13px' }}
+            onClick={() => setAddingVariant(true)}
+          >
+            + Add Variant
+          </button>
+        </div>
 
         {status === 'loading' && <p className="state-msg">Loading variants…</p>}
         {status === 'error' && <p className="state-msg error">Couldn't load variants.</p>}
 
         {status === 'ready' && variants.length === 0 && (
-          <p className="state-msg">No variants for this product.</p>
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <p className="state-msg" style={{ margin: '0 0 12px 0' }}>No variants for this product yet.</p>
+            <button
+              type="button"
+              className="auth-submit"
+              style={{ width: 'auto', display: 'inline-block', margin: '0 auto', padding: '8px 16px', fontSize: '13px' }}
+              onClick={() => setAddingVariant(true)}
+            >
+              Create First Variant
+            </button>
+          </div>
         )}
 
         {status === 'ready' && variants.length > 0 && (
@@ -119,6 +153,14 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
           variant={editingVariant}
           onSave={handleSaveVariant}
           onClose={() => setEditingVariant(null)}
+        />
+      )}
+
+      {addingVariant && (
+        <AddVariantModal
+          product={product}
+          onSave={handleCreateVariant}
+          onClose={() => setAddingVariant(false)}
         />
       )}
     </div>

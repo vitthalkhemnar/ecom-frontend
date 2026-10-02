@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { getProducts, uploadProducts, updateProduct, deleteProduct } from '../../api';
+import { getProducts, uploadProducts, updateProduct, deleteProduct, createProduct } from '../../api';
 import EditProductModal from './EditProductModal';
+import CreateProductModal from './CreateProductModal';
 import VariantsModal from './VariantsModal';
-import type { Product } from '../../types';
+import type { Product, CreateProductRequest } from '../../types';
 import Pagination from './Pagination';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -19,6 +20,7 @@ export default function ProductsTab() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [creatingProduct, setCreatingProduct] = useState(false);
   const [variantsProduct, setVariantsProduct] = useState<Product | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
@@ -84,6 +86,20 @@ export default function ProductsTab() {
       toast.error(err.message || 'Failed to upload products.');
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleCreateProduct(payload: CreateProductRequest): Promise<Product> {
+    if (!isAuthenticated) throw new Error('Not authenticated');
+    try {
+      const created = await createProduct(payload);
+      setProducts((prev) => [created, ...prev]);
+      toast.success(`Product "${created.productName}" created!`);
+      setVariantsProduct(created);
+      return created;
+    } catch (err: any) {
+      toast.error(err.message || 'Could not create that product.');
+      throw err;
     }
   }
 
@@ -169,7 +185,7 @@ export default function ProductsTab() {
         </form>
       </div>
 
-      <div className="admin-controls">
+      <div className="admin-controls" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="auth-input admin-search"
           placeholder="Search by product name, brand, category, code…"
@@ -181,6 +197,14 @@ export default function ProductsTab() {
           <option value="brand">Sort by brand</option>
           <option value="price">Sort by price</option>
         </select>
+        <button
+          type="button"
+          className="auth-submit"
+          style={{ width: 'auto', margin: 0, padding: '10px 18px', whiteSpace: 'nowrap' }}
+          onClick={() => setCreatingProduct(true)}
+        >
+          + Add Product
+        </button>
       </div>
 
       {visibleProducts.length === 0 ? (
@@ -237,6 +261,13 @@ export default function ProductsTab() {
         </table>
       )}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+      {creatingProduct && (
+        <CreateProductModal
+          onCreate={handleCreateProduct}
+          onClose={() => setCreatingProduct(false)}
+        />
+      )}
 
       {editingProduct && (
         <EditProductModal product={editingProduct} onSave={handleSave} onClose={() => setEditingProduct(null)} />

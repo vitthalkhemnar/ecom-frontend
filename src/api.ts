@@ -1,6 +1,8 @@
 import type {
   Product,
   Variant,
+  CreateProductRequest,
+  CreateVariantRequest,
   AuthResponse,
   LoginRequest,
   RegisterRequest,
@@ -265,6 +267,14 @@ export function uploadProducts(file: File): Promise<string> {
   });
 }
 
+export function createProduct(payload: CreateProductRequest): Promise<Product> {
+  return request<Product>(PRODUCT_BASE_URL, `/product`, {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify(payload),
+  });
+}
+
 export function updateProduct(payload: Product): Promise<Product> {
   return request<Product>(PRODUCT_BASE_URL, `/product`, {
     method: 'PUT',
@@ -277,6 +287,14 @@ export function deleteProduct(id: number | string): Promise<boolean> {
   return request<boolean>(PRODUCT_BASE_URL, `/product/${id}`, {
     method: 'DELETE',
     headers: authHeader(),
+  });
+}
+
+export function createVariant(payload: CreateVariantRequest): Promise<Variant> {
+  return request<Variant>(PRODUCT_BASE_URL, `/variant`, {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify(payload),
   });
 }
 
