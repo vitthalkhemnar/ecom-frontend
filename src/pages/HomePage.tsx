@@ -23,7 +23,7 @@ export default function HomePage() {
     getProducts()
       .then((data) => {
         if (!cancelled) {
-          setProducts(data);
+          setProducts(data || []);
           setStatus('ready');
         }
       })

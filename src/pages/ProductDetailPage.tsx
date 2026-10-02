@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import VariantCard from '../components/VariantCard';
-import { getProducts, getVariants, formatINR } from '../api';
+import { getProductById, getVariants, formatINR } from '../api';
 import type { Product, Variant } from '../types';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -17,11 +17,10 @@ export default function ProductDetailPage() {
     let cancelled = false;
     setStatus('loading');
 
-    Promise.all([getProducts(), getVariants(id)])
-      .then(([products, variantData]) => {
+    Promise.all([getProductById(id), getVariants(id)])
+      .then(([productData, variantData]) => {
         if (cancelled) return;
-        const match = products.find((p) => String(p.id) === String(id));
-        setProduct(match || null);
+        setProduct(productData || null);
         setVariants(variantData);
         setStatus('ready');
       })

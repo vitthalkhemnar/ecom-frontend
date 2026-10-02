@@ -31,7 +31,7 @@ export default function ProductsTab() {
     if (!isAuthenticated) return;
     try {
       const data = await getProducts();
-      setProducts(data);
+      setProducts(data || []);
       setStatus('ready');
     } catch {
       setStatus('error');
@@ -119,7 +119,7 @@ export default function ProductsTab() {
     if (!isAuthenticated) return;
     try {
       const data = await getProducts();
-      setProducts(data);
+      setProducts(data || []);
     } catch {
       toast.error('Product list may be out of date — refresh to see the latest.');
     }

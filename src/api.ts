@@ -133,6 +133,12 @@ export function getProducts(): Promise<Product[]> {
   });
 }
 
+export function getProductById(productId: number | string): Promise<Product> {
+  return request<Product>(PRODUCT_BASE_URL, `/product/${productId}`, {
+    headers: authHeader(),
+  });
+}
+
 export function getVariants(productId: number | string): Promise<Variant[]> {
   return request<Variant[]>(PRODUCT_BASE_URL, `/variant/${productId}`, {
     headers: authHeader(),
