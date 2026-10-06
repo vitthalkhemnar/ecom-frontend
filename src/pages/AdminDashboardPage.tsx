@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
             className={`admin-tab ${tab === 'orders' ? 'active' : ''}`}
             onClick={() => setTab('orders')}
           >
-            Order management
+            Order history
           </button>
         </nav>
         <div className="admin-content">

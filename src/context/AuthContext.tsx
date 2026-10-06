@@ -14,6 +14,10 @@ interface AuthContextValue extends AuthState {
   isAdmin: boolean;
   setAuth: (data: AuthResponse) => void;
   logout: () => void;
+  isLoginModalOpen: boolean;
+  openLoginModal: (callback?: () => void) => void;
+  closeLoginModal: () => void;
+  requireAuth: (callback?: () => void) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -40,6 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return { token: null, username: null, roles: [] };
   });
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const pendingCallbackRef = useRef<(() => void) | null>(null);
   const loggingOutRef = useRef(false);
 
   useEffect(() => {
@@ -50,10 +57,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem('token');
-      toast.error("Session expired. Please log in again.");
+      toast.error("Please log in to continue.");
       setAuthState({ token: null, username: null, roles: [] });
+      setIsLoginModalOpen(true);
     });
   }, []);
+
+  function openLoginModal(callback?: () => void) {
+    if (callback) {
+      pendingCallbackRef.current = callback;
+    }
+    setIsLoginModalOpen(true);
+  }
+
+  function closeLoginModal() {
+    setIsLoginModalOpen(false);
+    pendingCallbackRef.current = null;
+  }
+
+  function requireAuth(callback?: () => void): boolean {
+    if (auth.token) {
+      callback?.();
+      return true;
+    }
+    openLoginModal(callback);
+    return false;
+  }
 
   function setAuth(data: AuthResponse) {
     loggingOutRef.current = false;
@@ -63,6 +92,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
     localStorage.setItem('token', data.token);
     setAuthState(newState);
+    setIsLoginModalOpen(false);
+
+    if (pendingCallbackRef.current) {
+      const cb = pendingCallbackRef.current;
+      pendingCallbackRef.current = null;
+      try {
+        cb();
+      } catch (err) {
+        console.error("Error executing pending action after login:", err);
+      }
+    }
   }
 
   function logout() {
@@ -74,7 +114,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ ...auth, isAuthenticated: !!auth.token, isAdmin: auth.roles.includes('ROLE_ADMIN'), setAuth, logout }}>
+    <AuthContext.Provider
+      value={{
+        ...auth,
+        isAuthenticated: !!auth.token,
+        isAdmin: auth.roles.includes('ROLE_ADMIN'),
+        setAuth,
+        logout,
+        isLoginModalOpen,
+        openLoginModal,
+        closeLoginModal,
+        requireAuth,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

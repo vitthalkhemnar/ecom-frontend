@@ -23,26 +23,36 @@ export default function VariantCard({ variant }: VariantCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [result, setResult] = useState<'success' | 'error' | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, requireAuth } = useAuth();
 
   const outOfStock = cls === 'out';
 
-  async function handleAddToCart() {
-  setAdding(true);
-  try {
-    await addItem({
-      productId: String(variant.productId),
-      variantId: String(variant.variantId),
-      price: variant.price,
-      quantity,
-    });
-    setResult('success');
-  } catch {
-    setResult('error');
-  } finally {
-    setAdding(false);
+  async function doAddToCart() {
+    setAdding(true);
+    try {
+      await addItem({
+        productId: String(variant.productId),
+        variantId: String(variant.variantId),
+        price: variant.price,
+        quantity,
+      });
+      setResult('success');
+    } catch {
+      setResult('error');
+    } finally {
+      setAdding(false);
+    }
   }
-}
+
+  function handleAddToCart() {
+    if (!isAuthenticated) {
+      requireAuth(() => {
+        doAddToCart();
+      });
+      return;
+    }
+    doAddToCart();
+  }
 
   return (
     <div className="variant-card">
@@ -62,7 +72,7 @@ export default function VariantCard({ variant }: VariantCardProps) {
       <span className={`variant-stock ${cls}`}>{label}</span>
       <span className="variant-price">{formatINR(variant.price)}</span>
 
-      {!outOfStock && isAuthenticated && (
+      {!outOfStock && (
         <div className="variant-cart-controls">
           <div className="qty-stepper">
             <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>

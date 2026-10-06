@@ -5,6 +5,9 @@ import type {
   CreateVariantRequest,
   AuthResponse,
   LoginRequest,
+  AdminLoginRequest,
+  SendOtpRequest,
+  VerifyOtpRequest,
   RegisterRequest,
   AddToCartRequest,
   CartItem,
@@ -110,6 +113,27 @@ async function request<T>(baseUrl: string, path: string, options?: RequestInit):
 
 export function login(payload: LoginRequest): Promise<AuthResponse> {
   return request<AuthResponse>(AUTH_BASE_URL, '/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function adminLogin(payload: AdminLoginRequest): Promise<AuthResponse> {
+  return request<AuthResponse>(AUTH_BASE_URL, '/auth/admin/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function sendOtp(payload: SendOtpRequest): Promise<{ message: string }> {
+  return request<{ message: string }>(AUTH_BASE_URL, '/auth/send-otp', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function verifyOtp(payload: VerifyOtpRequest): Promise<AuthResponse> {
+  return request<AuthResponse>(AUTH_BASE_URL, '/auth/verify-otp', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

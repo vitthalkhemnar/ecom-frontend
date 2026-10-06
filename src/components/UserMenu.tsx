@@ -44,7 +44,9 @@ export default function UserMenu() {
       {open && (
         <div className="user-menu-dropdown">
           <button type="button" onClick={() => go('/profile')}>Profile</button>
-          <button type="button" onClick={() => go('/orders')}>Order history</button>
+          {(
+            <button type="button" onClick={() => go('/orders')}>Order history</button>
+          )}
           {isAdmin && (
             <button type="button" onClick={() => go('/admin')}>Admin dashboard</button>
           )}

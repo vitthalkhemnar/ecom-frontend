@@ -9,6 +9,20 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface AdminLoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface SendOtpRequest {
+  email: string;
+}
+
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
 export interface RegisterRequest {
   username: string;
   firstName: string;

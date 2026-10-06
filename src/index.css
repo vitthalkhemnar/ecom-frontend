@@ -618,9 +618,16 @@ button { font-family: inherit; cursor: pointer; }
   border: 1px solid var(--sand);
   color: var(--sand);
   border-radius: 999px;
-  padding: 6px 14px;
+  padding: 6px 16px;
   font-size: 13px;
   font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.4;
+  transition: all 0.15s ease;
 }
 
 .header-logout:hover,
@@ -2097,4 +2104,109 @@ button { font-family: inherit; cursor: pointer; }
 
 .address-card-line {
   line-height: 1.4;
+}
+
+/* ---------- User Login Modal & Admin Login ---------- */
+
+.user-login-modal-overlay {
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.user-login-modal-card {
+  position: relative;
+  box-shadow: 0 20px 40px rgba(23, 32, 58, 0.2);
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.modal-subtitle {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--slate);
+  line-height: 1.4;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--slate);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.modal-close-btn:hover {
+  color: var(--ink);
+  background: var(--sand);
+}
+
+.modal-error {
+  margin-bottom: 16px;
+}
+
+.modal-submit-btn {
+  margin-top: 8px;
+}
+
+.otp-code-input {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 8px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.otp-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.modal-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--mango-deep);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  transition: opacity 0.15s;
+}
+
+.modal-link-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.modal-link-btn:disabled {
+  color: var(--slate);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.admin-auth-card {
+  border-top: 4px solid var(--mango);
+  box-shadow: 0 16px 32px rgba(23, 32, 58, 0.12);
 }

@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProductDetailPage from './pages/ProductDetailPage';
 import LoginPage from './pages/LoginPage';
+import AdminLoginPage from './pages/AdminLoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import CartIcon from './components/CartIcon.tsx';
@@ -18,14 +19,19 @@ import AdminDashboardPage from './pages/AdminDashboardPage.tsx';
 import { SearchProvider, useSearch } from './context/SearchContext.tsx';
 import HomePage from './pages/HomePage.tsx';
 import CheckoutAddressPage from './pages/CheckoutAddressPage.tsx';
+import UserLoginModal from './components/UserLoginModal.tsx';
 
 function Header() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, openLoginModal } = useAuth();
   const { searchTerm, setSearchTerm } = useSearch();
+  const location = useLocation();
+
+  const isAdminLoginPage = location.pathname === '/admin/login' || location.pathname === '/admin-login';
+
   return (
     <header className="site-header">
       <Link to="/" className="wordmark">Bazaar</Link>
-      {isAuthenticated && (
+      {!isAdminLoginPage && (
         <div className="header-search">
           <input
             className="header-search-input"
@@ -39,11 +45,23 @@ function Header() {
       <div className="header-auth">
         {isAuthenticated ? (
           <>
+            {/* {!isAdmin && <CartIcon />} */}
             <CartIcon />
             <UserMenu />
           </>
         ) : (
-          <Link to="/login" className="header-login-link">Log in</Link>
+          !isAdminLoginPage && (
+            <>
+              <CartIcon />
+              <button
+                type="button"
+                onClick={() => openLoginModal()}
+                className="header-login-link"
+              >
+                Log in
+              </button>
+            </>
+          )
         )}
       </div>
     </header>
@@ -57,18 +75,26 @@ function App() {
         <CartProvider>
           <Toaster position="top-center" />
           <BrowserRouter>
+            <UserLoginModal />
             <Header />
             <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-              <Route path="/product/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
+
+              {/* Admin Routes (Unclickable link, accessible via URL) */}
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin-login" element={<AdminLoginPage />} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+
+              {/* Protected User Routes */}
               <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><OrdersListPage /></ProtectedRoute>} />
               <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutAddressPage /></ProtectedRoute>} />
             </Routes>
           </BrowserRouter>
