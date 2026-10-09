@@ -18,7 +18,6 @@ export default function UserLoginModal() {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
 
-  // Close handler: redirect to home if current page requires authentication
   function handleClose() {
     closeLoginModal();
     const needsAuth = PROTECTED_PREFIXES.some((prefix) => location.pathname.startsWith(prefix));
@@ -103,7 +102,14 @@ export default function UserLoginModal() {
   }
 
   return (
-    <div className="modal-overlay user-login-modal-overlay">
+    <div
+      className="modal-overlay user-login-modal-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+    >
       <div
         className="modal-card user-login-modal-card"
         role="dialog"

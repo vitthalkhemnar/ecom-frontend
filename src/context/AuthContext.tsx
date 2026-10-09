@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import type { AuthResponse } from '../types';
 import { registerUnauthorizedHandler, setApiToken } from '../api';
 import toast from 'react-hot-toast';
@@ -63,26 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  function openLoginModal(callback?: () => void) {
+  const openLoginModal = useCallback((callback?: () => void) => {
     if (callback) {
       pendingCallbackRef.current = callback;
     }
     setIsLoginModalOpen(true);
-  }
+  }, []);
 
-  function closeLoginModal() {
+  const closeLoginModal = useCallback(() => {
     setIsLoginModalOpen(false);
     pendingCallbackRef.current = null;
-  }
+  }, []);
 
-  function requireAuth(callback?: () => void): boolean {
+  const requireAuth = useCallback((callback?: () => void): boolean => {
     if (auth.token) {
       callback?.();
       return true;
     }
     openLoginModal(callback);
     return false;
-  }
+  }, [auth.token, openLoginModal]);
 
   function setAuth(data: AuthResponse) {
     loggingOutRef.current = false;
