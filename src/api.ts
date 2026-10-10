@@ -4,11 +4,9 @@ import type {
   CreateProductRequest,
   CreateVariantRequest,
   AuthResponse,
-  LoginRequest,
   AdminLoginRequest,
   SendOtpRequest,
   VerifyOtpRequest,
-  RegisterRequest,
   AddToCartRequest,
   CartItem,
   RemoveFromCartRequest,
@@ -22,6 +20,9 @@ import type {
   UpdateAddressRequest,
   RazorpayOrderResponse,
   PaymentVerificationRequest,
+  SendPhoneOtpRequest,
+  VerifyPhoneOtpRequest,
+  PhoneSignupRequest,
   PaymentOrderRequest,
 } from './types';
 
@@ -111,13 +112,6 @@ async function request<T>(baseUrl: string, path: string, options?: RequestInit):
   return JSON.parse(text) as Promise<T>;
 }
 
-export function login(payload: LoginRequest): Promise<AuthResponse> {
-  return request<AuthResponse>(AUTH_BASE_URL, '/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
 export function adminLogin(payload: AdminLoginRequest): Promise<AuthResponse> {
   return request<AuthResponse>(AUTH_BASE_URL, '/auth/admin/login', {
     method: 'POST',
@@ -139,8 +133,29 @@ export function verifyOtp(payload: VerifyOtpRequest): Promise<AuthResponse> {
   });
 }
 
-export function register(payload: RegisterRequest): Promise<AuthResponse> {
-  return request<AuthResponse>(AUTH_BASE_URL, '/auth/register', {
+export function sendPhoneOtp(payload: SendPhoneOtpRequest): Promise<{ message: string; otp?: string }> {
+  return request<{ message: string; otp?: string }>(AUTH_BASE_URL, '/auth/send-phone-otp', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function registerWithPhone(payload: PhoneSignupRequest): Promise<AuthResponse> {
+  return request<AuthResponse>(AUTH_BASE_URL, '/auth/register-phone', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function sendPhoneLoginOtp(payload: SendPhoneOtpRequest): Promise<{ message: string; otp?: string }> {
+  return request<{ message: string; otp?: string }>(AUTH_BASE_URL, '/auth/send-phone-login-otp', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function verifyPhoneLoginOtp(payload: VerifyPhoneOtpRequest): Promise<AuthResponse> {
+  return request<AuthResponse>(AUTH_BASE_URL, '/auth/verify-phone-login-otp', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

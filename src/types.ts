@@ -4,11 +4,6 @@ export interface AuthResponse {
   roles: string[];
 }
 
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
 export interface AdminLoginRequest {
   username: string;
   password: string;
@@ -23,13 +18,21 @@ export interface VerifyOtpRequest {
   otp: string;
 }
 
-export interface RegisterRequest {
-  username: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  email: string;
+export interface SendPhoneOtpRequest {
   phone: string;
+}
+
+export interface VerifyPhoneOtpRequest {
+  phone: string;
+  otp: string;
+}
+
+export interface PhoneSignupRequest {
+  phone: string;
+  otp: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 export interface Product {
@@ -152,7 +155,7 @@ export interface User {
 
 export interface UserUpdateRequest {
   id: number;
-  username: string;
+  username?: string;
   firstName: string;
   lastName: string;
   email: string;

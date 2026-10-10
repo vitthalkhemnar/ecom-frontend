@@ -19,10 +19,9 @@ import AdminDashboardPage from './pages/AdminDashboardPage.tsx';
 import { SearchProvider, useSearch } from './context/SearchContext.tsx';
 import HomePage from './pages/HomePage.tsx';
 import CheckoutAddressPage from './pages/CheckoutAddressPage.tsx';
-import UserLoginModal from './components/UserLoginModal.tsx';
 
 function Header() {
-  const { isAuthenticated, openLoginModal } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { searchTerm, setSearchTerm } = useSearch();
   const location = useLocation();
 
@@ -53,13 +52,12 @@ function Header() {
           !isAdminLoginPage && (
             <>
               <CartIcon />
-              <button
-                type="button"
-                onClick={() => openLoginModal()}
+              <Link
+                to="/login"
                 className="header-login-link"
               >
                 Log in
-              </button>
+              </Link>
             </>
           )
         )}
@@ -75,7 +73,6 @@ function App() {
         <CartProvider>
           <Toaster position="top-center" />
           <BrowserRouter>
-            <UserLoginModal />
             <Header />
             <Routes>
               {/* Public Routes */}

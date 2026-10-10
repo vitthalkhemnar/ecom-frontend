@@ -59,30 +59,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('token');
       toast.error("Please log in to continue.");
       setAuthState({ token: null, username: null, roles: [] });
-      setIsLoginModalOpen(true);
+      window.location.href = '/login';
     });
   }, []);
 
-  const openLoginModal = useCallback((callback?: () => void) => {
-    if (callback) {
-      pendingCallbackRef.current = callback;
-    }
-    setIsLoginModalOpen(true);
+  const openLoginModal = useCallback(() => {
+    window.location.href = '/login';
   }, []);
 
-  const closeLoginModal = useCallback(() => {
-    setIsLoginModalOpen(false);
-    pendingCallbackRef.current = null;
-  }, []);
+  const closeLoginModal = useCallback(() => {}, []);
 
   const requireAuth = useCallback((callback?: () => void): boolean => {
     if (auth.token) {
       callback?.();
       return true;
     }
-    openLoginModal(callback);
+    window.location.href = '/login';
     return false;
-  }, [auth.token, openLoginModal]);
+  }, [auth.token]);
 
   function setAuth(data: AuthResponse) {
     loggingOutRef.current = false;
@@ -92,7 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
     localStorage.setItem('token', data.token);
     setAuthState(newState);
-    setIsLoginModalOpen(false);
 
     if (pendingCallbackRef.current) {
       const cb = pendingCallbackRef.current;
