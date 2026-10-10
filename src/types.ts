@@ -125,6 +125,8 @@ export interface CreateOrderItem {
 
 export interface OrderItem extends CreateOrderItem {
   bookingItemId: number;
+  brand?: string;
+  imageUrl?: string;
 }
 
 export interface CreateOrderRequest {
@@ -141,6 +143,8 @@ export interface Order {
   addressId: number;
   createdAt: string;
   items: OrderItem[];
+  user?: User;
+  address?: AddressResponse;
 }
 
 export interface User {

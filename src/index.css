@@ -2210,3 +2210,310 @@ button { font-family: inherit; cursor: pointer; }
   border-top: 4px solid var(--mango);
   box-shadow: 0 16px 32px rgba(23, 32, 58, 0.12);
 }
+
+/* ---------- Order Confirmation / Details Page ---------- */
+
+.order-confirmation-container {
+  max-width: 860px;
+  margin: 32px auto 60px;
+  padding: 0 16px;
+}
+
+.confirmation-hero-card {
+  background: #ffffff;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 16px;
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.confirmation-hero-card.confirmed {
+  border-top: 5px solid #10b981;
+}
+
+.confirmation-hero-card.failed {
+  border-top: 5px solid #ef4444;
+}
+
+.confirmation-hero-card.delivered {
+  border-top: 5px solid #3b82f6;
+}
+
+.confirmation-hero-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--ink, #111827);
+  letter-spacing: -0.5px;
+}
+
+.confirmation-hero-sub {
+  font-size: 15px;
+  color: var(--slate, #6b7280);
+  margin: 0 0 24px;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.confirmation-meta-bar {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line, #e5e7eb);
+}
+
+.confirmation-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
+}
+
+.confirmation-meta-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--slate, #9ca3af);
+  font-weight: 600;
+}
+
+.confirmation-meta-val {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink, #1f2937);
+}
+
+.confirmation-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.confirmation-status-pill.confirmed {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.confirmation-status-pill.failed {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.confirmation-status-pill.delivered {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.confirmation-grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .confirmation-grid-two {
+    grid-template-columns: 1fr;
+  }
+}
+
+.confirmation-info-card {
+  background: #ffffff;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.confirmation-card-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink, #1f2937);
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirmation-info-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink, #374151);
+}
+
+.confirmation-items-card {
+  background: #ffffff;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+}
+
+.confirmation-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line, #f3f4f6);
+  gap: 16px;
+}
+
+.confirmation-item-row:last-child {
+  border-bottom: none;
+}
+
+.confirmation-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.confirmation-item-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background: var(--sand, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--line, #e5e7eb);
+}
+
+.confirmation-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.confirmation-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirmation-item-brand {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  color: var(--slate, #9ca3af);
+}
+
+.confirmation-item-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink, #111827);
+}
+
+.confirmation-item-variant {
+  font-size: 13px;
+  color: var(--slate, #6b7280);
+}
+
+.confirmation-item-pricing {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.confirmation-item-line-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink, #111827);
+  display: block;
+}
+
+.confirmation-item-unit-qty {
+  font-size: 12.5px;
+  color: var(--slate, #6b7280);
+  margin-top: 2px;
+  display: block;
+}
+
+.confirmation-summary-section {
+  background: var(--sand, #f9fafb);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-top: 18px;
+}
+
+.confirmation-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--slate, #4b5563);
+  margin-bottom: 8px;
+}
+
+.confirmation-summary-row.total {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line, #d1d5db);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink, #111827);
+  margin-bottom: 0;
+}
+
+.confirmation-actions-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+
+.confirmation-btn-primary {
+  background: var(--mango, #ea580c);
+  color: #ffffff;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.confirmation-btn-primary:hover {
+  background: var(--mango-deep, #c2410c);
+}
+
+.confirmation-btn-secondary {
+  background: #ffffff;
+  color: var(--ink, #1f2937);
+  border: 1px solid var(--line, #d1d5db);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.confirmation-btn-secondary:hover {
+  background: var(--sand, #f3f4f6);
+  border-color: #9ca3af;
+}
