@@ -89,7 +89,6 @@ export default function CartPage() {
 
   return (
     <div className="page">
-      <Link to="/" className="back-link">← Back to all products</Link>
       <h1 className="detail-title">Your cart</h1>
       {items.length === 0 ? (
         <p className="state-msg">

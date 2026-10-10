@@ -40,7 +40,6 @@ export default function OrderDetailPage() {
   if (status === 'error' || !order) {
     return (
       <div className="page">
-        <Link to="/orders" className="back-link">← Back to your orders</Link>
         <p className="state-msg error">Couldn't load this order.</p>
       </div>
     );
@@ -48,8 +47,6 @@ export default function OrderDetailPage() {
 
   return (
     <div className="page">
-      <Link to="/orders" className="back-link">← Back to your orders</Link>
-
       <div className="order-detail-header">
         <div>
           <h1 className="detail-title">Order #{order.bookingId}</h1>

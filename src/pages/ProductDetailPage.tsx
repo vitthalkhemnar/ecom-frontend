@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import VariantCard from '../components/VariantCard';
 import { getProductById, getVariants, formatINR } from '../api';
 import type { Product, Variant } from '../types';
@@ -44,7 +44,6 @@ export default function ProductDetailPage() {
   if (status === 'error' || !product) {
     return (
       <div className="page">
-        <Link to="/" className="back-link">← Back to all products</Link>
         <p className="state-msg error">
           Couldn't load this product. Check that the product and variant services at
           localhost:9091 are running, then try again.
@@ -61,8 +60,6 @@ export default function ProductDetailPage() {
 
   return (
     <div className="page">
-      <Link to="/" className="back-link">← Back to all products</Link>
-
       <div className="detail-grid">
         <div className="detail-media">
           {image ? (
