@@ -76,7 +76,6 @@ export default function OrderDetailPage() {
     );
   }
 
-  const isConfirmed = order.status === 'CONFIRMED';
   const isDelivered = order.status === 'DELIVERED';
   const isFailed = order.status === 'FAILED' || order.status === 'CANCELLED';
   const statusType = isFailed ? 'failed' : isDelivered ? 'delivered' : 'confirmed';

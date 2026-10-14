@@ -64,10 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const openLoginModal = useCallback(() => {
+    setIsLoginModalOpen(true);
     window.location.href = '/login';
   }, []);
 
-  const closeLoginModal = useCallback(() => {}, []);
+  const closeLoginModal = useCallback(() => {
+    setIsLoginModalOpen(false);
+  }, []);
 
   const requireAuth = useCallback((callback?: () => void): boolean => {
     if (auth.token) {
