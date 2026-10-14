@@ -45,8 +45,7 @@ export default function ProductDetailPage() {
     return (
       <div className="page">
         <p className="state-msg error">
-          Couldn't load this product. Check that the product and variant services at
-          localhost:9091 are running, then try again.
+          Unable to load product details at this time. Please try again later.
         </p>
       </div>
     );
