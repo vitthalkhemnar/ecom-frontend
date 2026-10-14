@@ -1,8 +1,10 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { sendPhoneOtp, registerWithPhone } from '../api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { register, sendOtp } from '../api';
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export default function SignupPage() {
   const { setAuth } = useAuth();
@@ -27,32 +29,51 @@ export default function SignupPage() {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  async function handleSendOtp(e?: FormEvent) {
-    if (e) e.preventDefault();
-    const cleanPhone = phone.trim().replace(/\s+/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
+  function validateDetails(): string | null {
+    const cleanPhone = phone.trim().replace(/\D/g, '');
+    const cleanFirstName = firstName.trim();
+    const cleanLastName = lastName.trim();
+    const cleanEmail = email.trim();
 
-    if (email && email.trim() && !email.includes('@')) {
-      setError('If providing an email, please enter a valid email address.');
+    if (!cleanPhone) {
+      return 'Phone number is required.';
+    }
+    if (cleanPhone.length < 10) {
+      return 'Please enter a valid 10-digit mobile number.';
+    }
+    if (!cleanFirstName) {
+      return 'First name is required.';
+    }
+    if (!cleanLastName) {
+      return 'Last name is required.';
+    }
+    if (!cleanEmail) {
+      return 'Email address is required.';
+    }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return 'Please enter a valid email address (e.g. name@example.com).';
+    }
+    return null;
+  }
+
+  async function handleSendEmailOtp(e?: FormEvent) {
+    if (e) e.preventDefault();
+
+    const validationError = validateDetails();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setError(null);
     setLoading(true);
     try {
-      const res = await sendPhoneOtp({ phone: cleanPhone });
-      toast.success('Verification code sent to your phone!');
-      // If backend provides OTP in response for dev/test convenience:
-      if (res.otp) {
-        toast(`Dev OTP: ${res.otp}`, { icon: '🔑', duration: 8000 });
-      }
+      await sendOtp({ email: email.trim() });
+      toast.success('Verification code sent to your email!');
       setStep('otp');
       setCountdown(30);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send OTP to this phone number.';
+      const msg = err instanceof Error ? err.message : 'Failed to send verification code. Please check your email.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -70,12 +91,12 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const cleanPhone = phone.trim().replace(/\s+/g, '');
-      const authData = await registerWithPhone({
+      const authData = await register({
         phone: cleanPhone,
         otp: otp.trim(),
-        firstName: firstName.trim() || undefined,
-        lastName: lastName.trim() || undefined,
-        email: email.trim() ? email.trim() : undefined,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
       });
 
       toast.success(`Account created! Welcome, ${authData.username || 'User'}!`);
@@ -89,26 +110,34 @@ export default function SignupPage() {
     }
   }
 
+  const isFormIncomplete =
+    !phone.trim() ||
+    !firstName.trim() ||
+    !lastName.trim() ||
+    !email.trim();
+
   return (
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: '460px', width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <h1 className="auth-title" style={{ margin: '0 0 8px' }}>
-            {step === 'details' ? 'Create an account' : 'Verify Phone Number'}
+            {step === 'details' ? 'Create an account' : 'Verify Email Address'}
           </h1>
           <p style={{ color: 'var(--slate)', fontSize: '14px', margin: 0 }}>
             {step === 'details'
-              ? 'Sign up with your mobile number to get started'
-              : `Enter the 6-digit code sent to ${phone}`}
+              ? 'Fill in your details to get started'
+              : `Enter the 6-digit code sent to ${email}`}
           </p>
         </div>
 
         {error && <div className="auth-error" style={{ marginBottom: '18px' }}>{error}</div>}
 
         {step === 'details' ? (
-          <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleSendEmailOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} noValidate={false}>
             <label className="auth-label">
-              Phone Number
+              <span>
+                Phone Number <span style={{ color: 'var(--red, #ef4444)' }}>*</span>
+              </span>
               <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                 <span
                   style={{
@@ -131,7 +160,10 @@ export default function SignupPage() {
                   placeholder="9876543210"
                   maxLength={13}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/[^\d+]/g, ''))}
+                  onChange={(e) => {
+                    setPhone(e.target.value.replace(/[^\d+]/g, ''));
+                    if (error) setError(null);
+                  }}
                   autoFocus
                   required
                   style={{ flex: 1, marginTop: 0 }}
@@ -141,47 +173,60 @@ export default function SignupPage() {
 
             <div className="auth-field-row" style={{ display: 'flex', gap: '12px' }}>
               <label className="auth-label" style={{ flex: 1 }}>
-                First Name
+                <span>
+                  First Name <span style={{ color: 'var(--red, #ef4444)' }}>*</span>
+                </span>
                 <input
                   className="auth-input"
                   type="text"
                   placeholder="e.g. Rahul"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  required
                 />
               </label>
               <label className="auth-label" style={{ flex: 1 }}>
-                Last Name
+                <span>
+                  Last Name <span style={{ color: 'var(--red, #ef4444)' }}>*</span>
+                </span>
                 <input
                   className="auth-input"
                   type="text"
                   placeholder="e.g. Sharma"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  required
                 />
               </label>
             </div>
 
-            {/* <label className="auth-label">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Email Address</span>
-                <span style={{ fontSize: '11.5px', color: 'var(--slate)', fontWeight: 400 }}>
-                  (Optional — add anytime in profile)
-                </span>
-              </div>
+            <label className="auth-label">
+              <span>
+                Email Address <span style={{ color: 'var(--red, #ef4444)' }}>*</span>
+              </span>
               <input
                 className="auth-input"
                 type="email"
-                placeholder="name@example.com (optional)"
+                placeholder="name@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(null);
+                }}
+                required
               />
-            </label> */}
+            </label>
 
             <button
               className="auth-submit"
               type="submit"
-              disabled={loading || phone.trim().length < 10}
+              disabled={loading || isFormIncomplete}
               style={{ marginTop: '8px' }}
             >
               {loading ? 'Sending OTP…' : 'Send Verification OTP'}
@@ -199,7 +244,10 @@ export default function SignupPage() {
                 maxLength={6}
                 placeholder="000000"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => {
+                  setOtp(e.target.value.replace(/\D/g, ''));
+                  if (error) setError(null);
+                }}
                 autoFocus
                 required
                 style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '6px' }}
@@ -229,7 +277,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 className="modal-link-btn"
-                onClick={() => handleSendOtp()}
+                onClick={() => handleSendEmailOtp()}
                 disabled={loading || countdown > 0}
               >
                 {countdown > 0 ? `Resend code in ${countdown}s` : 'Resend code'}

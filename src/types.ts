@@ -27,7 +27,7 @@ export interface VerifyPhoneOtpRequest {
   otp: string;
 }
 
-export interface PhoneSignupRequest {
+export interface SignupRequest {
   phone: string;
   otp: string;
   firstName?: string;

@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { sendOtp, verifyOtp, sendPhoneLoginOtp, verifyPhoneLoginOtp } from '../api';
+import { sendOtp, verifyOtp } from '../api';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -9,9 +9,7 @@ export default function LoginPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone');
   const [step, setStep] = useState<'input' | 'otp'>('input');
-  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,32 +55,6 @@ export default function LoginPage() {
     }
   }
 
-  async function handleSendPhoneOtp(e?: FormEvent) {
-    if (e) e.preventDefault();
-    const cleanPhone = phone.trim().replace(/\s+/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await sendPhoneLoginOtp({ phone: cleanPhone });
-      toast.success('Verification code sent to your mobile phone!');
-      if (res.otp) {
-        toast(`Dev OTP: ${res.otp}`, { icon: '🔑', duration: 8000 });
-      }
-      setStep('otp');
-      setCountdown(30);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send verification code to this phone number.';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleVerifyOtp(e: FormEvent) {
     e.preventDefault();
     if (!otp || otp.trim().length !== 6) {
@@ -93,17 +65,14 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      let authData;
-      if (authMethod === 'phone') {
-        const cleanPhone = phone.trim().replace(/\s+/g, '');
-        authData = await verifyPhoneLoginOtp({ phone: cleanPhone, otp: otp.trim() });
-      } else {
-        authData = await verifyOtp({ email: email.trim(), otp: otp.trim() });
-      }
+      let authData = await verifyOtp({ email: email.trim(), otp: otp.trim() });
+      
       toast.success(`Welcome back, ${authData.username || 'User'}!`);
       setAuth(authData);
+
       const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
       navigate(from, { replace: true });
+
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid or expired code. Please try again.';
       setError(msg);
@@ -114,11 +83,7 @@ export default function LoginPage() {
 
   function handleResend() {
     if (countdown > 0 || loading) return;
-    if (authMethod === 'phone') {
-      handleSendPhoneOtp();
-    } else {
-      handleSendEmailOtp();
-    }
+    handleSendEmailOtp();
   }
 
   return (
@@ -130,11 +95,7 @@ export default function LoginPage() {
           </h1>
           <p style={{ color: 'var(--slate)', fontSize: '14px', margin: 0 }}>
             {step === 'input'
-              ? authMethod === 'phone'
-                ? 'Enter your mobile number to receive a one-time verification code'
-                : 'Enter your email address to receive a one-time verification code'
-              : authMethod === 'phone'
-              ? `We sent a 6-digit code via SMS to ${phone}`
+              ? 'Enter your email address to receive a one-time verification code'
               : `We sent a 6-digit code to ${email}`}
           </p>
         </div>
@@ -155,7 +116,7 @@ export default function LoginPage() {
                     textDecoration: 'none',
                   }}
                 >
-                  Create account with Phone OTP →
+                  Create new account →
                 </Link>
               </div>
             )}
@@ -163,120 +124,36 @@ export default function LoginPage() {
         )}
 
         {step === 'input' ? (
-          authMethod === 'phone' ? (
-            <form onSubmit={handleSendPhoneOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <label className="auth-label">
-                Mobile Number
-                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                  <span
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '0 12px',
-                      background: 'var(--sand, #f3f4f6)',
-                      border: '1px solid var(--line, #e5e7eb)',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      color: 'var(--slate)',
-                    }}
-                  >
-                    +91
-                  </span>
-                  <input
-                    className="auth-input"
-                    type="tel"
-                    placeholder="9876543210"
-                    maxLength={13}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/[^\d+]/g, ''))}
-                    autoFocus
-                    required
-                    style={{ flex: 1, marginTop: 0 }}
-                  />
-                </div>
-              </label>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-6px' }}>
-                <button
-                  type="button"
-                  className="modal-link-btn"
-                  style={{ fontSize: '13px', fontWeight: 500 }}
-                  onClick={() => {
-                    setAuthMethod('email');
-                    setError(null);
-                  }}
-                >
-                  Use email instead
-                </button>
-              </div>
-
-              <button
-                className="auth-submit"
-                type="submit"
-                disabled={loading || phone.trim().length < 10}
+          <form onSubmit={handleSendEmailOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <label className="auth-label">
+              Email address
+              <input
+                className="auth-input"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoFocus
+                required
+              />
+            </label>
+            <button
+              className="auth-submit"
+              type="submit"
+              disabled={loading || !email}
+            >
+              {loading ? 'Sending code…' : 'Send Verification Code'}
+            </button>
+            <div style={{ marginTop: '8px', textAlign: 'center', fontSize: '13.5px', color: 'var(--slate)' }}>
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                style={{ fontWeight: 600, color: 'var(--ink)', textDecoration: 'none' }}
               >
-                {loading ? 'Sending code…' : 'Send Verification Code'}
-              </button>
-
-              <div style={{ marginTop: '8px', textAlign: 'center', fontSize: '13.5px', color: 'var(--slate)' }}>
-                Don't have an account?{' '}
-                <Link
-                  to="/signup"
-                  style={{ fontWeight: 600, color: 'var(--ink)', textDecoration: 'none' }}
-                >
-                  Sign up
-                </Link>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleSendEmailOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <label className="auth-label">
-                Email address
-                <input
-                  className="auth-input"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoFocus
-                  required
-                />
-              </label>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-6px' }}>
-                <button
-                  type="button"
-                  className="modal-link-btn"
-                  style={{ fontSize: '13px', fontWeight: 500 }}
-                  onClick={() => {
-                    setAuthMethod('phone');
-                    setError(null);
-                  }}
-                >
-                  Use phone instead
-                </button>
-              </div>
-
-              <button
-                className="auth-submit"
-                type="submit"
-                disabled={loading || !email}
-              >
-                {loading ? 'Sending code…' : 'Send Verification Code'}
-              </button>
-
-              <div style={{ marginTop: '8px', textAlign: 'center', fontSize: '13.5px', color: 'var(--slate)' }}>
-                Don't have an account?{' '}
-                <Link
-                  to="/signup"
-                  style={{ fontWeight: 600, color: 'var(--ink)', textDecoration: 'none' }}
-                >
-                  Sign up
-                </Link>
-              </div>
-            </form>
-          )
+                Sign up
+              </Link>
+            </div>
+          </form>
         ) : (
           <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <label className="auth-label">
@@ -313,7 +190,7 @@ export default function LoginPage() {
                   setError(null);
                 }}
               >
-                ← Change {authMethod === 'phone' ? 'phone number' : 'email'}
+                ← Change email
               </button>
               <button
                 type="button"

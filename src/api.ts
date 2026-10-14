@@ -20,10 +20,8 @@ import type {
   UpdateAddressRequest,
   RazorpayOrderResponse,
   PaymentVerificationRequest,
-  SendPhoneOtpRequest,
-  VerifyPhoneOtpRequest,
-  PhoneSignupRequest,
   PaymentOrderRequest,
+  SignupRequest,
 } from './types';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8080';
@@ -133,29 +131,8 @@ export function verifyOtp(payload: VerifyOtpRequest): Promise<AuthResponse> {
   });
 }
 
-export function sendPhoneOtp(payload: SendPhoneOtpRequest): Promise<{ message: string; otp?: string }> {
-  return request<{ message: string; otp?: string }>(AUTH_BASE_URL, '/auth/send-phone-otp', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function registerWithPhone(payload: PhoneSignupRequest): Promise<AuthResponse> {
-  return request<AuthResponse>(AUTH_BASE_URL, '/auth/register-phone', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function sendPhoneLoginOtp(payload: SendPhoneOtpRequest): Promise<{ message: string; otp?: string }> {
-  return request<{ message: string; otp?: string }>(AUTH_BASE_URL, '/auth/send-phone-login-otp', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function verifyPhoneLoginOtp(payload: VerifyPhoneOtpRequest): Promise<AuthResponse> {
-  return request<AuthResponse>(AUTH_BASE_URL, '/auth/verify-phone-login-otp', {
+export function register(payload: SignupRequest): Promise<AuthResponse> {
+  return request<AuthResponse>(AUTH_BASE_URL, '/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
