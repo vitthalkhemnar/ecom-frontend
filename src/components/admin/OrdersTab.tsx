@@ -100,7 +100,7 @@ export default function OrdersTab() {
             {visibleOrders.map((order) => (
               <tr key={order.bookingId}>
                 <td style={{ fontFamily: 'var(--font-mono)' }}>#{order.bookingId}</td>
-                <td className="admin-cell-muted">@{order.username}</td>
+                <td className="admin-cell-muted">{order.user?.firstName} {order.user?.lastName}</td>
                 <td className="admin-cell-muted">{new Date(order.createdAt).toLocaleDateString()}</td>
                 <td>{order.items.length}</td>
                 <td>

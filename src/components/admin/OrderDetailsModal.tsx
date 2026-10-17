@@ -37,8 +37,12 @@ export default function OrderDetailsModal({ order, onClose }: OrderDetailsModalP
           <div className="order-section-card">
             <span className="order-section-label">Customer</span>
             <div className="order-detail-grid">
-              <span className="order-detail-key">Username</span>
-              <span>@{order.username}</span>
+              <span className="order-detail-key">Name</span>
+              <span>{order.user?.firstName} {order.user?.lastName}</span>
+              <span className="order-detail-key">Email</span>
+              <span>{order.user?.email}</span>
+              <span className="order-detail-key">Phone</span>
+              <span>{order.user?.phone}</span>
             </div>
           </div>
         </div>
