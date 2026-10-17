@@ -7,15 +7,15 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const original = product.price;
-  const now = product.price - product.discount;
-  const pctOff = original > 0 ? Math.round((product.discount / original) * 100) : 0;
+  // const original = product.price;
+  // const savings = product.price * (product.discount / 100);
+  // const now = original - savings;
   const image = product.images.length > 0 ? product.images[0] : null;
 
   return (
     <Link to={`/product/${product.id}`} className="product-card">
       <div className="product-media">
-        {pctOff > 0 && <span className="discount-tag">{pctOff}% OFF</span>}
+        {/* {product.discount > 0 && <span className="discount-tag">{product.discount}% OFF</span>} */}
         {image ? (
           <img src={image} alt={product.productName} loading="lazy" />
         ) : (
@@ -27,8 +27,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         <h3 className="product-name">{product.productName}</h3>
         <span className="product-brand">{product.brand}</span>
         <div className="price-row">
-          <span className="price-now">{formatINR(now)}</span>
-          {product.discount > 0 && <span className="price-was">{formatINR(original)}</span>}
+          <span className="price-now">{formatINR(product.price)}</span>
+          {/* {product.discount > 0 && <span className="price-was">{formatINR(original)}</span>} */}
         </div>
       </div>
     </Link>

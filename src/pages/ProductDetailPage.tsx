@@ -51,9 +51,9 @@ export default function ProductDetailPage() {
     );
   }
 
-  const original = product.price;
-  const now = product.price - product.discount;
-  const savings = product.discount;
+  // const original = product.price;
+  // const savings = product.price * (product.discount / 100);
+  // const now = original - savings;
   const attrEntries = Object.entries(product.attributes);
   const image = product.images.length > 0 ? product.images[0] : null;
 
@@ -74,12 +74,12 @@ export default function ProductDetailPage() {
           <div className="detail-brand">{product.brand} · {product.productCode}</div>
 
           <div className="detail-price-row">
-            <span className="detail-price-now">{formatINR(now)}</span>
-            {savings > 0 && <span className="detail-price-was">{formatINR(original)}</span>}
+            <span className="detail-price-now">{formatINR(product.price)}</span>
+            {/* {savings > 0 && <span className="detail-price-was">{formatINR(original)}</span>} */}
           </div>
-          {savings > 0 && (
+          {/* {savings > 0 && (
             <div className="detail-savings">You save {formatINR(savings)}</div>
-          )}
+          )} */}
 
           <p className="detail-desc">{product.description}</p>
 
