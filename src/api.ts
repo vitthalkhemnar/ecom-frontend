@@ -6,7 +6,6 @@ import type {
   AuthResponse,
   AdminLoginRequest,
   SendOtpRequest,
-  VerifyOtpRequest,
   AddToCartRequest,
   CartItem,
   RemoveFromCartRequest,
@@ -22,6 +21,7 @@ import type {
   PaymentVerificationRequest,
   PaymentOrderRequest,
   SignupRequest,
+  LoginRequest,
 } from './types';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8080';
@@ -117,15 +117,15 @@ export function adminLogin(payload: AdminLoginRequest): Promise<AuthResponse> {
   });
 }
 
-export function sendOtp(payload: SendOtpRequest): Promise<{ message: string }> {
-  return request<{ message: string }>(AUTH_BASE_URL, '/auth/send-otp', {
+export function sendOtp(payload: SendOtpRequest): Promise<{ status : string, message: string }> {
+  return request<{ status: string, message: string }>(AUTH_BASE_URL, '/auth/send-otp', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
-export function verifyOtp(payload: VerifyOtpRequest): Promise<AuthResponse> {
-  return request<AuthResponse>(AUTH_BASE_URL, '/auth/verify-otp', {
+export function login(payload: LoginRequest): Promise<AuthResponse> {
+  return request<AuthResponse>(AUTH_BASE_URL, '/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

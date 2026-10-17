@@ -68,7 +68,7 @@ export default function SignupPage() {
     setError(null);
     setLoading(true);
     try {
-      await sendOtp({ email: email.trim() });
+      await sendOtp({ email: email.trim(), action: 'signup' });
       toast.success('Verification code sent to your email!');
       setStep('otp');
       setCountdown(30);
@@ -80,7 +80,7 @@ export default function SignupPage() {
     }
   }
 
-  async function handleVerifyOtp(e: FormEvent) {
+  async function handleLogin(e: FormEvent) {
     e.preventDefault();
     if (!otp || otp.trim().length !== 6) {
       setError('Please enter the 6-digit verification code.');
@@ -233,7 +233,7 @@ export default function SignupPage() {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <label className="auth-label">
               6-Digit Verification Code
               <input

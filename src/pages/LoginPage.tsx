@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link, type ErrorResponse } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { sendOtp, verifyOtp } from '../api';
+import { sendOtp, login } from '../api';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -43,19 +43,26 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await sendOtp({ email: email.trim() });
-      toast.success('Verification code sent to your email!');
-      setStep('otp');
-      setCountdown(30);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send verification code. Please check your email.';
+      const resp = await sendOtp({ email: email.trim(), action: 'login' });
+
+      if(resp.status === 'success') {
+        toast.success(resp.message || 'Verification code sent to your email!');
+        setStep('otp');
+        setCountdown(30);  
+      } else {
+        setError(resp.message || 'Failed to send verification code.');
+        setLoading(false);
+        return;
+      }
+    } catch (err: ErrorResponse | unknown) {
+      const msg = (err as any)?.error || (err instanceof Error ? err.message : 'Failed to send verification code. Please try again.');
       setError(msg);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleVerifyOtp(e: FormEvent) {
+  async function handleLogin(e: FormEvent) {
     e.preventDefault();
     if (!otp || otp.trim().length !== 6) {
       setError('Please enter the 6-digit verification code.');
@@ -65,7 +72,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      let authData = await verifyOtp({ email: email.trim(), otp: otp.trim() });
+      let authData = await login({ email: email.trim(), otp: otp.trim() });
       
       toast.success(`Welcome back, ${authData.username || 'User'}!`);
       setAuth(authData);
@@ -155,7 +162,7 @@ export default function LoginPage() {
             </div>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <label className="auth-label">
               6-Digit Code
               <input

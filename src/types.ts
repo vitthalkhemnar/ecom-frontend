@@ -11,9 +11,10 @@ export interface AdminLoginRequest {
 
 export interface SendOtpRequest {
   email: string;
+  action: 'login' | 'signup' | 'forgot-password';
 }
 
-export interface VerifyOtpRequest {
+export interface LoginRequest {
   email: string;
   otp: string;
 }
@@ -223,4 +224,14 @@ export interface PaymentVerificationRequest {
   razorpayOrderId: string;
   razorpayPaymentId: string;
   razorpaySignature: string;
+}
+
+export interface ErrorResponse {
+  status: number;
+  message: string;
+  timestamp: string;
+  path : string;
+  error: string;
+  requestId : string;
+  trace : string;
 }
