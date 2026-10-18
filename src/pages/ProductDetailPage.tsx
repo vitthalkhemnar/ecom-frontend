@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import VariantCard from '../components/VariantCard';
 import { getProductById, getVariants, formatINR } from '../api';
 import type { Product, Variant } from '../types';
@@ -36,7 +36,9 @@ export default function ProductDetailPage() {
   if (status === 'loading') {
     return (
       <div className="page">
-        <p className="state-msg">Loading product…</p>
+        <div style={{ textAlign: 'center', padding: '80px 0' }}>
+          <div className="loading-spinner" style={{ margin: '0 auto' }} />
+        </div>
       </div>
     );
   }
@@ -44,9 +46,20 @@ export default function ProductDetailPage() {
   if (status === 'error' || !product) {
     return (
       <div className="page">
-        <p className="state-msg error">
-          Unable to load product details at this time. Please try again later.
-        </p>
+        <div className="order-empty-state">
+          <div className="order-empty-icon-wrap" style={{ color: 'var(--rust)' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 className="order-empty-title">Product not found</h2>
+          <p className="order-empty-desc">The product you are looking for is currently unavailable or has been removed.</p>
+          <Link to="/" className="order-cta-btn">
+            Browse Catalog
+          </Link>
+        </div>
       </div>
     );
   }
@@ -54,8 +67,8 @@ export default function ProductDetailPage() {
   // const original = product.price;
   // const savings = product.price * (product.discount / 100);
   // const now = original - savings;
-  const attrEntries = Object.entries(product.attributes);
-  const image = product.images.length > 0 ? product.images[0] : null;
+  const attrEntries = Object.entries(product.attributes || {});
+  const image = product.images && product.images.length > 0 ? product.images[0] : null;
 
   return (
     <div className="page">
@@ -92,18 +105,15 @@ export default function ProductDetailPage() {
                 </>
               )}
               {attrEntries.map(([key, value]) => (
-                <>
-                  <dt key={`${key}-label`}>{key.replaceAll('_', ' ')}</dt>
-                  <dd key={`${key}-value`}>{String(value)}</dd>
-                </>
+                <span key={key} style={{ display: 'contents' }}>
+                  <dt>{key.replaceAll('_', ' ')}</dt>
+                  <dd>{String(value)}</dd>
+                </span>
               ))}
             </dl>
           )}
 
-          <h2 className="section-label">Available variants</h2>
-          <p className="section-sub">
-            {variants.length} variant{variants.length !== 1 ? 's' : ''} for this product
-          </p>
+          <h2 className="section-label" style={{ marginBottom: '14px' }}>Available variants</h2>
 
           {variants.length === 0 ? (
             <p className="state-msg">No variants listed for this product yet.</p>

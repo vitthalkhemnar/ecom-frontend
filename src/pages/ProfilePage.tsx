@@ -66,8 +66,27 @@ export default function ProfilePage() {
 
   return (
     <div className="page">
-      {status === 'loading' && <p className="state-msg">Loading profile…</p>}
-      {status === 'error' && <p className="state-msg error">Couldn't load your profile.</p>}
+      {status === 'loading' && (
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <div className="loading-spinner" style={{ margin: '0 auto' }} />
+        </div>
+      )}
+      {status === 'error' && (
+        <div className="order-empty-state">
+          <div className="order-empty-icon-wrap" style={{ color: 'var(--rust)' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 className="order-empty-title">Unable to load profile</h2>
+          <p className="order-empty-desc">Could not retrieve account details. Please try again.</p>
+          <button type="button" className="order-cta-btn" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        </div>
+      )}
 
       {status === 'ready' && user && (
         <div className="profile-card">

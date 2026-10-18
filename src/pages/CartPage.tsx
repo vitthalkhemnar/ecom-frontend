@@ -91,9 +91,22 @@ export default function CartPage() {
     <div className="page">
       <h1 className="detail-title">Your cart</h1>
       {items.length === 0 ? (
-        <p className="state-msg">
-          Your cart is empty. <Link to="/">Browse products</Link>
-        </p>
+        <div className="order-empty-state" style={{ margin: '40px auto' }}>
+          <div className="order-empty-icon-wrap">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+          </div>
+          <h2 className="order-empty-title">Your cart is empty</h2>
+          <p className="order-empty-desc">
+            Explore our collection and find products you'll love.
+          </p>
+          <Link to="/" className="order-cta-btn">
+            Start Shopping
+          </Link>
+        </div>
       ) : (
         <>
           <div className="cart-list">

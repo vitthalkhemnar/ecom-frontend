@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -24,38 +24,56 @@ function Header() {
   const { isAuthenticated } = useAuth();
   const { searchTerm, setSearchTerm } = useSearch();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const isAdminLoginPage = location.pathname === '/admin/login' || location.pathname === '/admin-login';
+  const isAuthPage = ['/login', '/signup', '/forgot-password', '/admin/login', '/admin-login'].includes(location.pathname);
+  const isAdminDashboard = location.pathname.startsWith('/admin');
+  const isCheckout = location.pathname === '/checkout';
+
+  // Only show search on consumer browsing pages
+  const showSearch = !isAuthPage && !isAdminDashboard && !isCheckout;
+  // Only show cart on consumer pages
+  const showCart = !isAuthPage && !isAdminDashboard;
 
   return (
     <header className="site-header">
-      <Link to="/" className="wordmark">Bazaar</Link>
-      {!isAdminLoginPage && (
+      <Link to="/" className="wordmark">
+        Bazaar
+        {isAdminDashboard && (
+          <span style={{ fontSize: '12px', opacity: 0.65, fontWeight: 500, marginLeft: '8px', letterSpacing: '0.05em' }}>
+            ADMIN
+          </span>
+        )}
+      </Link>
+
+      {showSearch && (
         <div className="header-search">
           <input
             className="header-search-input"
             type="text"
             placeholder="Search products, brands, categories…"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              if (location.pathname !== '/' && e.target.value) {
+                navigate('/');
+              }
+            }}
           />
         </div>
       )}
+
       <div className="header-auth">
         {isAuthenticated ? (
           <>
-            {/* {!isAdmin && <CartIcon />} */}
-            <CartIcon />
+            {showCart && <CartIcon />}
             <UserMenu />
           </>
         ) : (
-          !isAdminLoginPage && (
+          !isAuthPage && (
             <>
-              <CartIcon />
-              <Link
-                to="/login"
-                className="header-login-link"
-              >
+              {showCart && <CartIcon />}
+              <Link to="/login" className="header-login-link">
                 Log in
               </Link>
             </>

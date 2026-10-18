@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearch } from '../context/SearchContext';
 import ProductCard from '../components/ProductCard';
-import LocationBadge from '../components/LocationBadge';
 import { getProducts } from '../api';
 import type { Product } from '../types';
 import { getCategoryIcon } from '../constants/CategoryIcons';
@@ -72,8 +71,6 @@ export default function HomePage() {
 
   return (
     <div className="page">
-      <LocationBadge />
-
       {categories.length > 1 && (
         <div className="chip-row">
           {categories.map((cat) => (
@@ -89,11 +86,49 @@ export default function HomePage() {
         </div>
       )}
 
-      {status === 'loading' && <p className="state-msg">Loading products…</p>}
-      {status === 'error' && (
-        <p className="state-msg error">Couldn't reach the product service. Make sure it's running, then reload.</p>
+      {status === 'loading' && (
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <div className="loading-spinner" style={{ margin: '0 auto' }} />
+        </div>
       )}
-      {status === 'ready' && filtered.length === 0 && <p className="state-msg">No products match your search.</p>}
+
+      {status === 'error' && (
+        <div className="order-empty-state">
+          <div className="order-empty-icon-wrap" style={{ color: 'var(--rust)' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 className="order-empty-title">Unable to load products</h2>
+          <p className="order-empty-desc">
+            Something went wrong while loading the catalog. Please try refreshing.
+          </p>
+          <button
+            type="button"
+            className="order-cta-btn"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {status === 'ready' && filtered.length === 0 && (
+        <div className="order-empty-state">
+          <div className="order-empty-icon-wrap">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+          <h2 className="order-empty-title">No products found</h2>
+          <p className="order-empty-desc">
+            We couldn't find any items matching your criteria. Try searching with different keywords or browse other categories.
+          </p>
+        </div>
+      )}
 
       {status === 'ready' && filtered.length > 0 && (
         <>
@@ -104,7 +139,9 @@ export default function HomePage() {
           </div>
           <div ref={sentinelRef} style={{ height: 1 }} />
           {visibleCount < filtered.length && (
-            <p className="state-msg" style={{ padding: '20px 0' }}>Loading more…</p>
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <div className="loading-spinner" style={{ margin: '0 auto', width: '28px', height: '28px' }} />
+            </div>
           )}
         </>
       )}

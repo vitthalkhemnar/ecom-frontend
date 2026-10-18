@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -37,11 +37,31 @@ export default function CheckoutAddressPage() {
     AddressResponse | undefined
   >(undefined);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const orderPlacedRef = useRef(false);
 
   const navigate = useNavigate();
   const location = useLocation();
 
   const orderItems: CreateOrderItem[] = location.state?.orderItems ?? [];
+
+  const effectiveOrderItems: CreateOrderItem[] = orderItems.length > 0
+    ? orderItems
+    : items.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        productName: `Product #${item.productId}`,
+        size: '',
+        color: '',
+        quantity: String(item.quantity),
+        priceAtBooking: String(item.price),
+      }));
+
+  // Initial redirect: only if cart was already empty upon opening checkout
+  useEffect(() => {
+    if (!orderPlacedRef.current && items.length === 0) {
+      navigate('/cart', { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -124,7 +144,7 @@ export default function CheckoutAddressPage() {
       const order = await createOrder({
         totalAmount: totalPrice.toFixed(2),
         addressId: selectedId,
-        items: orderItems,
+        items: effectiveOrderItems,
       });
 
       /*
@@ -159,6 +179,9 @@ export default function CheckoutAddressPage() {
         upi: { qr: true },
 
         handler: async (response: RazorpayPaymentResponse) => {
+          orderPlacedRef.current = true;
+          const confirmedOrderId = order.bookingId || (order as any).orderId;
+
           try {
             /*
              * STEP 4
@@ -166,9 +189,7 @@ export default function CheckoutAddressPage() {
              */
             const isVerified = await verifyPayment({
               razorpayOrderId: response.razorpay_order_id,
-
               razorpayPaymentId: response.razorpay_payment_id,
-
               razorpaySignature: response.razorpay_signature,
             });
 
@@ -178,84 +199,69 @@ export default function CheckoutAddressPage() {
             }
 
             /*
-             * Payment is successfully verified.
-             *
-             * Now continue with the existing
-             * post-order processing.
-             */
-
-            /*
              * STEP 5
-             * Send confirmation email.
+             * Send confirmation email (non-blocking).
              */
             try {
               if (user?.email) {
-                await sendMail(
-                  {
-                    to: user.email,
-
-                    data: {
-                      bookingId: order.bookingId,
-                      username: order.username,
-                      status: order.status,
-                      totalAmount: order.totalAmount,
-
-                      orderDate: new Date(order.createdAt).toLocaleString(
-                        "en-IN",
-                        {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        },
-                      ),
-
-                      items: order.items.map((item) => ({
-                        productName: item.productName,
-
-                        variant:
-                          [item.color, item.size].filter(Boolean).join(" · ") ||
-                          "Standard",
-
-                        quantity: item.quantity,
-
-                        priceAtBooking: item.priceAtBooking,
-
-                        lineTotal: (
-                          Number(item.priceAtBooking) * Number(item.quantity)
-                        ).toFixed(2),
-                      })),
-                    },
-                  }
-                );
+                await sendMail({
+                  to: user.email,
+                  data: {
+                    bookingId: confirmedOrderId,
+                    username: order.username || user.username,
+                    status: order.status || "CONFIRMED",
+                    totalAmount: order.totalAmount,
+                    orderDate: new Date(order.createdAt || Date.now()).toLocaleString(
+                      "en-IN",
+                      {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      },
+                    ),
+                    items: (order.items || effectiveOrderItems).map((item) => ({
+                      productName: item.productName,
+                      variant:
+                        [item.color, item.size].filter(Boolean).join(" · ") ||
+                        "Standard",
+                      quantity: String(item.quantity),
+                      priceAtBooking: String(item.priceAtBooking),
+                      lineTotal: (
+                        Number(item.priceAtBooking) * Number(item.quantity)
+                      ).toFixed(2),
+                    })),
+                  },
+                });
               }
-            } catch {
-              toast.error(
-                "Order placed, but the confirmation email could not be sent.",
-              );
+            } catch (mailError) {
+              console.warn("Confirmation email could not be sent:", mailError);
             }
 
             /*
              * STEP 6
-             * Remove purchased items from cart.
+             * Remove purchased items from cart (non-blocking).
              */
-            for (const item of items) {
-              await removeItem({
-                productId: item.productId,
-                variantId: item.variantId,
-                price: item.price,
-                quantity: item.quantity,
-              });
+            try {
+              for (const item of items) {
+                await removeItem({
+                  productId: item.productId,
+                  variantId: item.variantId,
+                  price: item.price,
+                  quantity: item.quantity,
+                });
+              }
+            } catch (cartError) {
+              console.warn("Could not remove some items from cart:", cartError);
             }
 
             toast.success("Payment successful. Order placed!");
 
             /*
              * STEP 7
-             * Navigate to existing order details.
+             * Navigate to order confirmation page.
              */
-            navigate(`/orders/${order.bookingId}`);
+            navigate(`/orders/${confirmedOrderId}`);
           } catch (error) {
             console.error("Payment verification/post-payment error:", error);
-
             toast.error("Payment was completed, but order processing failed.");
           } finally {
             setPlacingOrder(false);
@@ -292,7 +298,9 @@ export default function CheckoutAddressPage() {
   if (status === "loading") {
     return (
       <div className="page">
-        <p className="state-msg">Loading addresses…</p>
+        <div style={{ textAlign: "center", padding: "80px 0" }}>
+          <div className="loading-spinner" style={{ margin: "0 auto" }} />
+        </div>
       </div>
     );
   }
@@ -300,7 +308,20 @@ export default function CheckoutAddressPage() {
   if (status === "error") {
     return (
       <div className="page">
-        <p className="state-msg error">Couldn't load your addresses.</p>
+        <div className="order-empty-state">
+          <div className="order-empty-icon-wrap" style={{ color: 'var(--rust)' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2 className="order-empty-title">Unable to load addresses</h2>
+          <p className="order-empty-desc">An error occurred while retrieving your delivery addresses. Please try again.</p>
+          <button type="button" className="order-cta-btn" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

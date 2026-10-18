@@ -81,7 +81,7 @@ export default function OrdersListPage() {
     if (query) {
       result = result.filter((order) => {
         const matchesId = String(order.bookingId).includes(query);
-        const matchesItem = order.items.some((item) =>
+        const matchesItem = (order.items || []).some((item) =>
           item.productName?.toLowerCase().includes(query)
         );
         return matchesId || matchesItem;
@@ -139,19 +139,13 @@ export default function OrdersListPage() {
     <div className="order-history-page">
       <div className="order-history-header-section">
         <div className="order-history-title-row">
-          <div>
-            <h1 className="order-history-title">Order History</h1>
-            <p className="order-history-subtitle">
-              View receipts, check order status, and track your past purchases.
-            </p>
-          </div>
+          <h1 className="order-history-title">Order History</h1>
         </div>
       </div>
 
       {status === 'loading' && (
         <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
-          <p className="state-msg">Loading your orders…</p>
+          <div className="loading-spinner" style={{ margin: '0 auto' }} />
         </div>
       )}
 

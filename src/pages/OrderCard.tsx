@@ -61,7 +61,8 @@ function formatDate(dateStr: string): string {
 
 export default function OrderCard({ order }: OrderCardProps) {
   const badge = statusBadge(order.status);
-  const totalItemCount = order.items.reduce(
+  const items = order.items || [];
+  const totalItemCount = items.reduce(
     (sum, item) => sum + (parseInt(item.quantity, 10) || 1),
     0
   );
@@ -102,7 +103,7 @@ export default function OrderCard({ order }: OrderCardProps) {
 
       <div className="order-history-body">
         <div className="order-items-list">
-          {order.items.map((item) => {
+          {items.map((item) => {
             const itemPrice = Number(item.priceAtBooking) || 0;
             const itemQty = parseInt(item.quantity, 10) || 1;
             const lineTotal = itemPrice * itemQty;

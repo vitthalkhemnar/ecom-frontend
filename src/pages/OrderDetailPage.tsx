@@ -52,8 +52,7 @@ export default function OrderDetailPage() {
   if (status === 'loading') {
     return (
       <div className="order-confirmation-container" style={{ textAlign: 'center', padding: '80px 20px' }}>
-        <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
-        <p className="state-msg" style={{ fontSize: '15px' }}>Loading order details…</p>
+        <div className="loading-spinner" style={{ margin: '0 auto' }} />
       </div>
     );
   }
@@ -197,11 +196,11 @@ export default function OrderDetailPage() {
       {/* Items Section - PURE INFORMATION, NO PRODUCT LINKS! */}
       <div className="confirmation-items-card">
         <h2 className="confirmation-card-title" style={{ marginBottom: '6px' }}>
-          Items Ordered ({order.items.length})
+          Items Ordered ({(order.items || []).length})
         </h2>
 
         <div style={{ marginTop: '12px' }}>
-          {order.items.map((item) => {
+          {(order.items || []).map((item) => {
             const unitPrice = Number(item.priceAtBooking);
             const qty = Number(item.quantity);
             const lineTotal = unitPrice * qty;
