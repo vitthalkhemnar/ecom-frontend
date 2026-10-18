@@ -66,7 +66,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated]);
 
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  // Count distinct products in the cart so multiple quantities of the same product count as one
+  const itemCount = new Set(
+    items.map((item) => item.productId).filter(Boolean),
+  ).size;
   const totalPrice = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
