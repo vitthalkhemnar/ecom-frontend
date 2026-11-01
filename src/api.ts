@@ -75,6 +75,37 @@ function authHeader(): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export class ApiError extends Error {
+  status: number;
+  fieldErrors?: Record<string, string>;
+  data?: any;
+
+  constructor(message: string, status: number, fieldErrors?: Record<string, string>, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.fieldErrors = fieldErrors;
+    this.data = data;
+  }
+}
+
+export function getErrorMessage(err: unknown, fallback = 'An unexpected error occurred. Please try again.'): string {
+  if (!err) return fallback;
+  if (typeof err === 'string') return err;
+  if (err instanceof ApiError) return err.message || fallback;
+  if (err instanceof Error) return err.message || fallback;
+  if (typeof err === 'object') {
+    const anyErr = err as any;
+    if (anyErr.message) return String(anyErr.message);
+    if (anyErr.fieldErrors) {
+      const vals = Object.values(anyErr.fieldErrors);
+      if (vals.length > 0) return vals.join('. ');
+    }
+    if (anyErr.error) return String(anyErr.error);
+  }
+  return fallback;
+}
+
 async function request<T>(baseUrl: string, path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${baseUrl}${path}`, {
     ...options,
@@ -87,20 +118,46 @@ async function request<T>(baseUrl: string, path: string, options?: RequestInit):
   if (res.status === 401 || res.status === 403) {
     if (!path.startsWith('/auth/')) {
       onUnauthorized?.();
+      throw new ApiError('Session expired. Please log in again.', res.status);
     }
-    throw new Error('Session expired');
   }
 
   if (!res.ok) {
     const errText = await res.text();
-    let errMsg = `Request to ${path} failed with status ${res.status}`;
+    let errMsg = `Request failed with status ${res.status}`;
+    let fieldErrors: Record<string, string> | undefined = undefined;
+    let errJson: any = null;
+
     try {
-      const errJson = JSON.parse(errText);
-      errMsg = errJson.message || errJson.error || errMsg;
+      errJson = JSON.parse(errText);
+      if (errJson && typeof errJson === 'object') {
+        if (errJson.fieldErrors && typeof errJson.fieldErrors === 'object' && Object.keys(errJson.fieldErrors).length > 0) {
+          fieldErrors = errJson.fieldErrors;
+          const messages = Object.values(errJson.fieldErrors).filter(Boolean);
+          errMsg = messages.join('. ');
+        } else if (Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+          fieldErrors = {};
+          const messages: string[] = [];
+          for (const err of errJson.errors) {
+            const field = err.field || 'field';
+            const msg = err.defaultMessage || err.message || 'Invalid value';
+            fieldErrors[field] = msg;
+            messages.push(msg);
+          }
+          errMsg = messages.join('. ');
+        } else if (errJson.message && typeof errJson.message === 'string') {
+          errMsg = errJson.message;
+        } else if (errJson.error && typeof errJson.error === 'string') {
+          errMsg = errJson.error;
+        }
+      }
     } catch {
-      if (errText) errMsg = errText;
+      if (errText && errText.trim().length > 0) {
+        const stripped = errText.replace(/<[^>]*>?/gm, '').trim();
+        errMsg = stripped.length > 200 ? stripped.slice(0, 200) + '…' : stripped;
+      }
     }
-    throw new Error(errMsg);
+    throw new ApiError(errMsg, res.status, fieldErrors, errJson);
   }
 
   const text = await res.text();

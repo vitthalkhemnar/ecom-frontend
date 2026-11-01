@@ -574,11 +574,56 @@ button { font-family: inherit; cursor: pointer; }
 
 .auth-error {
   background: rgba(196, 67, 43, 0.1);
+  border: 1px solid rgba(196, 67, 43, 0.25);
   color: var(--rust);
   font-size: 13px;
-  padding: 10px 12px;
-  border-radius: 4px;
+  line-height: 1.45;
+  padding: 10px 14px;
+  border-radius: 6px;
   margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.auth-input.has-error,
+.auth-input-error {
+  border-color: var(--rust) !important;
+  background-color: rgba(196, 67, 43, 0.03) !important;
+}
+
+.auth-input.has-error:focus,
+.auth-input.has-error:focus-visible,
+.auth-input-error:focus,
+.auth-input-error:focus-visible {
+  outline: none;
+  border-color: var(--rust) !important;
+  box-shadow: 0 0 0 3px rgba(196, 67, 43, 0.15) !important;
+}
+
+.field-error-msg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--rust);
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.modal-form-error {
+  background: rgba(196, 67, 43, 0.08);
+  border: 1px solid rgba(196, 67, 43, 0.25);
+  color: var(--rust);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .auth-note {
