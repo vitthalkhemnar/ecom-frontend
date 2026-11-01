@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getOrderById, getAllAddress, getUserDetails, formatINR } from '../api';
 import type { Order, AddressResponse, User } from '../types';
+import OrderTrackingModal from '../components/OrderTrackingModal';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -11,6 +12,7 @@ export default function OrderDetailPage() {
   const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<Status>('loading');
+  const [showTracking, setShowTracking] = useState<boolean>(false);
   const [fallbackAddress, setFallbackAddress] = useState<AddressResponse | null>(null);
   const [fallbackUser, setFallbackUser] = useState<User | null>(null);
 
@@ -265,12 +267,38 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {/* Action Buttons: Only Continue Shopping */}
+      {/* Action Buttons */}
       <div className="confirmation-actions-row">
+        <button
+          type="button"
+          onClick={() => setShowTracking(true)}
+          className="confirmation-btn-track"
+          id="detail-track-order-btn"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <rect x="1" y="3" width="15" height="13" rx="2" />
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+            <circle cx="5.5" cy="18.5" r="2.5" />
+            <circle cx="18.5" cy="18.5" r="2.5" />
+          </svg>
+          Track Package
+        </button>
+
+        <Link to="/orders" className="confirmation-btn-secondary">
+          View Order History
+        </Link>
+
         <Link to="/" className="confirmation-btn-primary">
           Continue Shopping
         </Link>
       </div>
+
+      {showTracking && order && (
+        <OrderTrackingModal
+          order={order}
+          onClose={() => setShowTracking(false)}
+        />
+      )}
     </div>
   );
 }

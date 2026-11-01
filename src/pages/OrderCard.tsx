@@ -4,6 +4,7 @@ import type { Order } from '../types';
 
 interface OrderCardProps {
   order: Order;
+  onTrack?: (order: Order) => void;
 }
 
 function statusBadge(status: string) {
@@ -59,7 +60,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export default function OrderCard({ order }: OrderCardProps) {
+export default function OrderCard({ order, onTrack }: OrderCardProps) {
   const badge = statusBadge(order.status);
   const items = order.items || [];
   const totalItemCount = items.reduce(
@@ -92,12 +93,6 @@ export default function OrderCard({ order }: OrderCardProps) {
             {badge.icon}
             <span>{badge.label}</span>
           </span>
-          <Link to={`/orders/${order.bookingId}`} className="order-view-details-btn">
-            View Details
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </Link>
         </div>
       </header>
 
@@ -171,8 +166,28 @@ export default function OrderCard({ order }: OrderCardProps) {
         </div>
 
         <div className="order-footer-links">
-          <Link to={`/orders/${order.bookingId}`} className="order-footer-action-link">
-            Track / Invoice Details →
+          {onTrack && (
+            <button
+              type="button"
+              className="order-track-btn"
+              onClick={() => onTrack(order)}
+              title="Track shipment progress"
+              id={`track-order-btn-${order.bookingId}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="1" y="3" width="15" height="13" rx="2" />
+                <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
+                <circle cx="5.5" cy="18.5" r="2.5" />
+                <circle cx="18.5" cy="18.5" r="2.5" />
+              </svg>
+              Track Order
+            </button>
+          )}
+          <Link to={`/orders/${order.bookingId}`} className="order-view-details-btn">
+            View Details
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
           </Link>
         </div>
       </footer>

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getOrders } from '../api';
 import type { Order } from '../types';
 import OrderCard from './OrderCard';
+import OrderTrackingModal from '../components/OrderTrackingModal';
 
 type Status = 'loading' | 'ready' | 'error';
 type SortOption = 'newest' | 'oldest' | 'amount-desc' | 'amount-asc';
@@ -27,6 +28,7 @@ export default function OrdersListPage() {
   const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState<Status>('loading');
+  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
 
   // Filters & Pagination State
   const [searchQuery, setSearchQuery] = useState('');
@@ -297,7 +299,11 @@ export default function OrdersListPage() {
           ) : (
             <div className="order-cards-stack">
               {paginatedOrders.map((order) => (
-                <OrderCard key={order.bookingId} order={order} />
+                <OrderCard
+                  key={order.bookingId}
+                  order={order}
+                  onTrack={(ord) => setTrackingOrder(ord)}
+                />
               ))}
             </div>
           )}
@@ -353,6 +359,15 @@ export default function OrdersListPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Order Tracking Modal Box */}
+      {trackingOrder && (
+        <OrderTrackingModal
+          order={trackingOrder}
+          onClose={() => setTrackingOrder(null)}
+          onStatusUpdated={fetchUserOrders}
+        />
       )}
     </div>
   );

@@ -11,7 +11,6 @@ import {
   createOrder,
   createPaymentOrder,
   verifyPayment,
-  sendMail,
   getUserDetails,
   formatINR,
 } from "../api";
@@ -196,44 +195,6 @@ export default function CheckoutAddressPage() {
             if (!isVerified) {
               toast.error("Payment verification failed.");
               return;
-            }
-
-            /*
-             * STEP 5
-             * Send confirmation email (non-blocking).
-             */
-            try {
-              if (user?.email) {
-                await sendMail({
-                  to: user.email,
-                  data: {
-                    bookingId: confirmedOrderId,
-                    username: order.username || user.username,
-                    status: order.status || "CONFIRMED",
-                    totalAmount: order.totalAmount,
-                    orderDate: new Date(order.createdAt || Date.now()).toLocaleString(
-                      "en-IN",
-                      {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      },
-                    ),
-                    items: (order.items || effectiveOrderItems).map((item) => ({
-                      productName: item.productName,
-                      variant:
-                        [item.color, item.size].filter(Boolean).join(" · ") ||
-                        "Standard",
-                      quantity: String(item.quantity),
-                      priceAtBooking: String(item.priceAtBooking),
-                      lineTotal: (
-                        Number(item.priceAtBooking) * Number(item.quantity)
-                      ).toFixed(2),
-                    })),
-                  },
-                });
-              }
-            } catch (mailError) {
-              console.warn("Confirmation email could not be sent:", mailError);
             }
 
             /*
