@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getUserDetails, updateUser } from '../api';
+import { getUserDetails, updateUser, getErrorMessage } from '../api';
 import type { User } from '../types';
 import toast from 'react-hot-toast';
 
 type Status = 'loading' | 'ready' | 'error';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ProfilePage() {
   const { isAuthenticated } = useAuth();
@@ -12,6 +13,7 @@ export default function ProfilePage() {
   const [status, setStatus] = useState<Status>('loading');
   const [editingEmail, setEditingEmail] = useState(false);
   const [emailInput, setEmailInput] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [savingEmail, setSavingEmail] = useState(false);
 
   useEffect(() => {
@@ -29,11 +31,16 @@ export default function ProfilePage() {
   async function handleSaveEmail(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
-    if (!emailInput || !emailInput.includes('@')) {
-      toast.error('Please enter a valid email address.');
+    if (!emailInput.trim()) {
+      setEmailError('Email address is required.');
+      return;
+    }
+    if (!EMAIL_REGEX.test(emailInput.trim())) {
+      setEmailError('Please enter a valid email address.');
       return;
     }
 
+    setEmailError(null);
     setSavingEmail(true);
     try {
       const updated = await updateUser({
@@ -49,7 +56,8 @@ export default function ProfilePage() {
       setEditingEmail(false);
       toast.success('Email updated successfully!');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to update email.';
+      const msg = getErrorMessage(err, 'Failed to update email.');
+      setEmailError(msg);
       toast.error(msg);
     } finally {
       setSavingEmail(false);
@@ -112,37 +120,53 @@ export default function ProfilePage() {
             <div className="profile-field" style={{ alignItems: 'flex-start' }}>
               <span className="profile-field-label">Email Address</span>
               {editingEmail ? (
-                <form onSubmit={handleSaveEmail} style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <input
-                    type="email"
-                    className="auth-input"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="name@example.com"
-                    autoFocus
-                    required
-                    style={{ padding: '6px 10px', fontSize: '13.5px', width: '220px' }}
-                  />
-                  <button
-                    type="submit"
-                    className="auth-submit"
-                    disabled={savingEmail}
-                    style={{ padding: '6px 14px', fontSize: '13px', width: 'auto' }}
-                  >
-                    {savingEmail ? 'Saving…' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    className="modal-link-btn"
-                    onClick={() => {
-                      setEditingEmail(false);
-                      setEmailInput(user.email || '');
-                    }}
-                    style={{ fontSize: '13px' }}
-                  >
-                    Cancel
-                  </button>
-                </form>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <form onSubmit={handleSaveEmail} style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }} noValidate>
+                    <input
+                      type="email"
+                      className={`auth-input ${emailError ? 'has-error' : ''}`}
+                      value={emailInput}
+                      onChange={(e) => {
+                        setEmailInput(e.target.value);
+                        if (emailError) setEmailError(null);
+                      }}
+                      placeholder="name@example.com"
+                      autoFocus
+                      required
+                      style={{ padding: '6px 10px', fontSize: '13.5px', width: '220px' }}
+                    />
+                    <button
+                      type="submit"
+                      className="auth-submit"
+                      disabled={savingEmail}
+                      style={{ padding: '6px 14px', fontSize: '13px', width: 'auto' }}
+                    >
+                      {savingEmail ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      type="button"
+                      className="modal-link-btn"
+                      onClick={() => {
+                        setEditingEmail(false);
+                        setEmailInput(user.email || '');
+                        setEmailError(null);
+                      }}
+                      style={{ fontSize: '13px' }}
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                  {emailError && (
+                    <span className="field-error-msg" style={{ marginTop: '2px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      {emailError}
+                    </span>
+                  )}
+                </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span className="profile-field-value" style={{ color: user.email ? 'inherit' : 'var(--slate)' }}>

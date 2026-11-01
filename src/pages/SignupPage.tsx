@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { register, sendOtp } from '../api';
+import { register, sendOtp, getErrorMessage, ApiError } from '../api';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -18,6 +18,7 @@ export default function SignupPage() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [countdown, setCountdown] = useState(0);
 
   // Resend cooldown timer
@@ -29,43 +30,50 @@ export default function SignupPage() {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  function validateDetails(): string | null {
+  function validateDetails(): Record<string, string> {
+    const errs: Record<string, string> = {};
     const cleanPhone = phone.trim().replace(/\D/g, '');
     const cleanFirstName = firstName.trim();
     const cleanLastName = lastName.trim();
     const cleanEmail = email.trim();
 
     if (!cleanPhone) {
-      return 'Phone number is required.';
+      errs.phone = 'Mobile number is required.';
+    } else if (cleanPhone.length < 10) {
+      errs.phone = 'Please enter a valid 10-digit mobile number.';
     }
-    if (cleanPhone.length < 10) {
-      return 'Please enter a valid 10-digit mobile number.';
-    }
+
     if (!cleanFirstName) {
-      return 'First name is required.';
+      errs.firstName = 'First name is required.';
+    } else if (cleanFirstName.length < 2) {
+      errs.firstName = 'First name must be at least 2 characters.';
     }
+
     if (!cleanLastName) {
-      return 'Last name is required.';
+      errs.lastName = 'Last name is required.';
     }
+
     if (!cleanEmail) {
-      return 'Email address is required.';
+      errs.email = 'Email address is required.';
+    } else if (!EMAIL_REGEX.test(cleanEmail)) {
+      errs.email = 'Please enter a valid email address (e.g. name@example.com).';
     }
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      return 'Please enter a valid email address (e.g. name@example.com).';
-    }
-    return null;
+
+    return errs;
   }
 
   async function handleSendEmailOtp(e?: FormEvent) {
     if (e) e.preventDefault();
 
-    const validationError = validateDetails();
-    if (validationError) {
-      setError(validationError);
+    const validationErrs = validateDetails();
+    if (Object.keys(validationErrs).length > 0) {
+      setFieldErrors(validationErrs);
+      setError(Object.values(validationErrs)[0]);
       return;
     }
 
     setError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       await sendOtp({ email: email.trim(), action: 'signup' });
@@ -73,8 +81,12 @@ export default function SignupPage() {
       setStep('otp');
       setCountdown(30);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send verification code. Please check your email.';
+      const msg = getErrorMessage(err, 'Failed to send verification code. Please check your email.');
       setError(msg);
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      }
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -82,18 +94,28 @@ export default function SignupPage() {
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
-    if (!otp || otp.trim().length !== 6) {
+    const cleanOtp = otp.trim();
+
+    if (!cleanOtp) {
       setError('Please enter the 6-digit verification code.');
+      setFieldErrors({ otp: 'Verification code is required.' });
+      return;
+    }
+
+    if (cleanOtp.length !== 6 || !/^\d{6}$/.test(cleanOtp)) {
+      setError('Verification code must be exactly 6 digits.');
+      setFieldErrors({ otp: 'Code must be 6 numeric digits.' });
       return;
     }
 
     setError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
-      const cleanPhone = phone.trim().replace(/\s+/g, '');
+      const cleanPhone = phone.trim().replace(/\D/g, '');
       const authData = await register({
         phone: cleanPhone,
-        otp: otp.trim(),
+        otp: cleanOtp,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
@@ -103,8 +125,14 @@ export default function SignupPage() {
       setAuth(authData);
       navigate('/', { replace: true });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Invalid or expired OTP. Please try again.';
+      const msg = getErrorMessage(err, 'Invalid or expired OTP. Please check the code and try again.');
       setError(msg);
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      } else {
+        setFieldErrors({ otp: msg });
+      }
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -130,7 +158,16 @@ export default function SignupPage() {
           </p>
         </div>
 
-        {error && <div className="auth-error" style={{ marginBottom: '18px' }}>{error}</div>}
+        {error && (
+          <div className="auth-error" style={{ marginBottom: '18px' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: '2px' }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
 
         {step === 'details' ? (
           <form onSubmit={handleSendEmailOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} noValidate={false}>
@@ -155,13 +192,14 @@ export default function SignupPage() {
                   +91
                 </span>
                 <input
-                  className="auth-input"
+                  className={`auth-input ${fieldErrors.phone ? 'has-error' : ''}`}
                   type="tel"
                   placeholder="9876543210"
                   maxLength={13}
                   value={phone}
                   onChange={(e) => {
                     setPhone(e.target.value.replace(/[^\d+]/g, ''));
+                    if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: '' }));
                     if (error) setError(null);
                   }}
                   autoFocus
@@ -169,6 +207,16 @@ export default function SignupPage() {
                   style={{ flex: 1, marginTop: 0 }}
                 />
               </div>
+              {fieldErrors.phone && (
+                <span className="field-error-msg">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {fieldErrors.phone}
+                </span>
+              )}
             </label>
 
             <div className="auth-field-row" style={{ display: 'flex', gap: '12px' }}>
@@ -177,32 +225,54 @@ export default function SignupPage() {
                   First Name <span style={{ color: 'var(--red, #ef4444)' }}>*</span>
                 </span>
                 <input
-                  className="auth-input"
+                  className={`auth-input ${fieldErrors.firstName ? 'has-error' : ''}`}
                   type="text"
                   placeholder="e.g. Rahul"
                   value={firstName}
                   onChange={(e) => {
                     setFirstName(e.target.value);
+                    if (fieldErrors.firstName) setFieldErrors((prev) => ({ ...prev, firstName: '' }));
                     if (error) setError(null);
                   }}
                   required
                 />
+                {fieldErrors.firstName && (
+                  <span className="field-error-msg">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {fieldErrors.firstName}
+                  </span>
+                )}
               </label>
               <label className="auth-label" style={{ flex: 1 }}>
                 <span>
                   Last Name <span style={{ color: 'var(--red, #ef4444)' }}>*</span>
                 </span>
                 <input
-                  className="auth-input"
+                  className={`auth-input ${fieldErrors.lastName ? 'has-error' : ''}`}
                   type="text"
                   placeholder="e.g. Sharma"
                   value={lastName}
                   onChange={(e) => {
                     setLastName(e.target.value);
+                    if (fieldErrors.lastName) setFieldErrors((prev) => ({ ...prev, lastName: '' }));
                     if (error) setError(null);
                   }}
                   required
                 />
+                {fieldErrors.lastName && (
+                  <span className="field-error-msg">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {fieldErrors.lastName}
+                  </span>
+                )}
               </label>
             </div>
 
@@ -211,16 +281,27 @@ export default function SignupPage() {
                 Email Address <span style={{ color: 'var(--red, #ef4444)' }}>*</span>
               </span>
               <input
-                className="auth-input"
+                className={`auth-input ${fieldErrors.email ? 'has-error' : ''}`}
                 type="email"
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
                   if (error) setError(null);
                 }}
                 required
               />
+              {fieldErrors.email && (
+                <span className="field-error-msg">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {fieldErrors.email}
+                </span>
+              )}
             </label>
 
             <button
@@ -237,7 +318,7 @@ export default function SignupPage() {
             <label className="auth-label">
               6-Digit Verification Code
               <input
-                className="auth-input otp-code-input"
+                className={`auth-input otp-code-input ${fieldErrors.otp ? 'has-error' : ''}`}
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -246,12 +327,23 @@ export default function SignupPage() {
                 value={otp}
                 onChange={(e) => {
                   setOtp(e.target.value.replace(/\D/g, ''));
+                  if (fieldErrors.otp) setFieldErrors((prev) => ({ ...prev, otp: '' }));
                   if (error) setError(null);
                 }}
                 autoFocus
                 required
                 style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '6px' }}
               />
+              {fieldErrors.otp && (
+                <span className="field-error-msg" style={{ justifyContent: 'center' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {fieldErrors.otp}
+                </span>
+              )}
             </label>
 
             <button
