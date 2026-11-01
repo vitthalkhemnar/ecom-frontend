@@ -13,6 +13,7 @@ import {
   verifyPayment,
   getUserDetails,
   formatINR,
+  getErrorMessage,
 } from "../api";
 import AddressFormModal from "../components/AddressFormModal";
 import type {
@@ -96,9 +97,10 @@ export default function CheckoutAddressPage() {
       }
 
       toast.success("Address saved.");
-    } catch {
-      toast.error("Could not save that address.");
-      throw new Error("save failed");
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Could not save that address.");
+      toast.error(msg);
+      throw err;
     }
   }
 
@@ -117,8 +119,8 @@ export default function CheckoutAddressPage() {
       }
 
       toast.success("Address deleted.");
-    } catch {
-      toast.error("Could not delete that address.");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Could not delete that address."));
     }
   }
 
@@ -221,9 +223,9 @@ export default function CheckoutAddressPage() {
              * Navigate to order confirmation page.
              */
             navigate(`/orders/${confirmedOrderId}`);
-          } catch (error) {
+          } catch (error: unknown) {
             console.error("Payment verification/post-payment error:", error);
-            toast.error("Payment was completed, but order processing failed.");
+            toast.error(getErrorMessage(error, "Payment was completed, but order processing failed."));
           } finally {
             setPlacingOrder(false);
           }
@@ -247,10 +249,10 @@ export default function CheckoutAddressPage() {
        */
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Order/payment initialization failed:", error);
 
-      toast.error("Unable to start payment.");
+      toast.error(getErrorMessage(error, "Unable to start payment."));
 
       setPlacingOrder(false);
     }
