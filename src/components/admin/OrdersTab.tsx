@@ -25,7 +25,7 @@ export default function OrdersTab() {
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
   const [page, setPage] = useState(0);
 
-  useEffect(() => {
+  const loadOrders = () => {
     if (!isAuthenticated) return;
     getAllOrders()
       .then((data) => {
@@ -33,6 +33,10 @@ export default function OrdersTab() {
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
+  };
+
+  useEffect(() => {
+    loadOrders();
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -120,7 +124,11 @@ export default function OrdersTab() {
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       {viewingOrder && (
-        <OrderDetailsModal order={viewingOrder} onClose={() => setViewingOrder(null)} />
+        <OrderDetailsModal
+          order={viewingOrder}
+          onClose={() => setViewingOrder(null)}
+          onStatusUpdated={loadOrders}
+        />
       )}
     </div>
   );

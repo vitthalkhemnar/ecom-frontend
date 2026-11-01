@@ -78,14 +78,28 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
       <div className="modal-card modal-card-wide" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
           <h2 className="modal-title" style={{ margin: 0 }}>Variants — {product.productName}</h2>
-          <button
-            type="button"
-            className="auth-submit"
-            style={{ width: 'auto', margin: 0, padding: '8px 16px', fontSize: '13px' }}
-            onClick={() => setAddingVariant(true)}
-          >
-            + Add Variant
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              className="auth-submit"
+              style={{ width: 'auto', margin: 0, padding: '8px 16px', fontSize: '13px' }}
+              onClick={() => setAddingVariant(true)}
+            >
+              + Add Variant
+            </button>
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={onClose}
+              aria-label="Close modal"
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', cursor: 'pointer', border: 'none', background: 'transparent', color: 'var(--slate)' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {status === 'loading' && <p className="state-msg">Loading variants…</p>}
@@ -141,11 +155,6 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
           </table>
         )}
 
-        <div className="modal-actions">
-          <button type="button" className="admin-cancel-btn" onClick={onClose}>
-            Close
-          </button>
-        </div>
       </div>
 
       {editingVariant && (
