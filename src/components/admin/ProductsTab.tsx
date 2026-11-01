@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { getProducts, uploadProducts, updateProduct, deleteProduct, createProduct } from '../../api';
+import { getProducts, uploadProducts, updateProduct, deleteProduct, createProduct, getErrorMessage } from '../../api';
 import EditProductModal from './EditProductModal';
 import CreateProductModal from './CreateProductModal';
 import VariantsModal from './VariantsModal';
@@ -82,8 +82,8 @@ export default function ProductsTab() {
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       fetchProducts();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to upload products.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to upload products.'));
     } finally {
       setUploading(false);
     }
@@ -97,8 +97,9 @@ export default function ProductsTab() {
       toast.success(`Product "${created.productName}" created!`);
       setVariantsProduct(created);
       return created;
-    } catch (err: any) {
-      toast.error(err.message || 'Could not create that product.');
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'Could not create that product.');
+      toast.error(msg);
       throw err;
     }
   }
@@ -109,9 +110,10 @@ export default function ProductsTab() {
       const updated = await updateProduct(payload);
       setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
       toast.success(`Updated ${updated.productName}`);
-    } catch {
-      toast.error('Could not update that product.');
-      throw new Error('update failed');
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'Could not update that product.');
+      toast.error(msg);
+      throw err;
     }
   }
 
@@ -126,8 +128,8 @@ export default function ProductsTab() {
       } else {
         toast.error('Delete did not succeed.');
       }
-    } catch {
-      toast.error('Could not delete that product.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Could not delete that product.'));
     }
   }
 

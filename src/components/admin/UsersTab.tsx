@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { getAdminUsers, updateUser, deleteUser } from '../../api';
+import { getAdminUsers, updateUser, deleteUser, getErrorMessage } from '../../api';
 import type { User, UserUpdateRequest } from '../../types';
 import EditUserModal from './EditUserDetail';
 import Pagination from './Pagination';
@@ -63,9 +63,10 @@ export default function UsersTab() {
       const updated = await updateUser(payload);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       toast.success(`Updated ${updated.username}`);
-    } catch {
-      toast.error('Could not update that user.');
-      throw new Error('update failed');
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'Could not update that user.');
+      toast.error(msg);
+      throw err;
     }
   }
 
@@ -80,8 +81,8 @@ export default function UsersTab() {
       } else {
         toast.error('Delete did not succeed.');
       }
-    } catch {
-      toast.error('Could not delete that user.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Could not delete that user.'));
     }
   }
 

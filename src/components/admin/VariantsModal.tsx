@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getVariants, updateVariant, deleteVariant, createVariant } from '../../api';
+import { getVariants, updateVariant, deleteVariant, createVariant, getErrorMessage } from '../../api';
 import EditVariantModal from './EditVariantModal';
 import AddVariantModal from './AddVariantModal';
 import type { Product, Variant, CreateVariantRequest } from '../../types';
@@ -34,8 +34,8 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
       setVariants((prev) => [...prev, created]);
       toast.success('Variant added successfully.');
       return created;
-    } catch (err: any) {
-      toast.error(err.message || 'Could not add variant.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Could not add variant.'));
       throw err;
     }
   }
@@ -45,9 +45,9 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
       const updated = await updateVariant(payload);
       setVariants((prev) => prev.map((v) => (v.variantId === updated.variantId ? updated : v)));
       toast.success('Variant updated.');
-    } catch {
-      toast.error('Could not update variant.');
-      throw new Error('update failed');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Could not update variant.'));
+      throw err;
     }
   }
 
@@ -68,8 +68,8 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
       } else {
         toast.error('Delete did not succeed.');
       }
-    } catch {
-      toast.error('Could not delete variant.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Could not delete variant.'));
     }
   }
 

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { getOrderTracking, changeOrderStatus, formatINR } from '../api';
+import { getOrderTracking, changeOrderStatus, formatINR, getErrorMessage } from '../api';
 import type { Order, OrderTracking, OrderTransLog } from '../types';
 
 interface OrderTrackingModalProps {
@@ -193,8 +193,8 @@ export default function OrderTrackingModal({ order, onClose, onStatusUpdated }: 
       toast.success(`Order state transitioned: ${currentStatus} ➔ ${selectedNextState}`);
       await fetchTracking(true);
       onStatusUpdated?.();
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update order state');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to update order state'));
     } finally {
       setTransitioning(false);
     }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import type { Product, CreateVariantRequest, Variant } from '../../types';
+import { getErrorMessage, ApiError } from '../../api';
 
 interface AddVariantModalProps {
   product: Product;
@@ -16,19 +16,42 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
   const [image, setImage] = useState(product.images && product.images.length > 0 ? product.images[0] : '');
   const [active, setActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  function validate(): Record<string, string> {
+    const errs: Record<string, string> = {};
+    if (!size.trim() && !color.trim()) {
+      errs.size = 'Please specify at least a size or color.';
+      errs.color = 'Please specify at least a size or color.';
+    }
+
+    if (price === '' || isNaN(Number(price))) {
+      errs.price = 'Price is required.';
+    } else if (Number(price) <= 0) {
+      errs.price = 'Price must be greater than 0.';
+    }
+
+    if (stock === '' || isNaN(Number(stock))) {
+      errs.stock = 'Stock quantity is required.';
+    } else if (Number(stock) < 0) {
+      errs.stock = 'Stock quantity cannot be negative.';
+    }
+
+    return errs;
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-
-    if (price === '' || isNaN(Number(price)) || Number(price) < 0) {
-      toast.error('Please enter a valid price.');
-      return;
-    }
-    if (stock === '' || isNaN(Number(stock)) || Number(stock) < 0) {
-      toast.error('Please enter a valid stock quantity.');
+    const valErrs = validate();
+    if (Object.keys(valErrs).length > 0) {
+      setFieldErrors(valErrs);
+      setError(Object.values(valErrs)[0]);
       return;
     }
 
+    setError(null);
+    setFieldErrors({});
     setSaving(true);
     try {
       await onSave({
@@ -41,8 +64,12 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
         active,
       });
       onClose();
-    } catch {
-      // Error handled in parent handler
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'Failed to add variant. Please check your inputs.');
+      setError(msg);
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      }
     } finally {
       setSaving(false);
     }
@@ -51,30 +78,85 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <h2 className="modal-title">Add New Variant</h2>
-        <div style={{ fontSize: '13px', color: 'var(--slate)', marginBottom: '16px' }}>
-          For product: <strong>{product.productName}</strong> ({product.productCode})
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <div>
+            <h2 className="modal-title" style={{ margin: 0 }}>Add New Variant</h2>
+            <div style={{ fontSize: '13px', color: 'var(--slate)', marginTop: '4px' }}>
+              For product: <strong>{product.productName}</strong> ({product.productCode})
+            </div>
+          </div>
+          <button
+            type="button"
+            className="modal-close-btn"
+            onClick={onClose}
+            aria-label="Close"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', cursor: 'pointer', border: 'none', background: 'transparent', color: 'var(--slate)' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <form onSubmit={handleSave} className="modal-fields">
+        {error && (
+          <div className="modal-form-error">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="modal-fields" noValidate>
           <div className="auth-field-row">
             <label className="auth-label">
               Size
               <input
-                className="auth-input"
+                className={`auth-input ${fieldErrors.size ? 'has-error' : ''}`}
                 placeholder="e.g. M, L, XL, 9, 10, NA"
                 value={size}
-                onChange={(e) => setSize(e.target.value)}
+                onChange={(e) => {
+                  setSize(e.target.value);
+                  if (fieldErrors.size) setFieldErrors((prev) => ({ ...prev, size: '' }));
+                  if (error) setError(null);
+                }}
               />
+              {fieldErrors.size && (
+                <span className="field-error-msg">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {fieldErrors.size}
+                </span>
+              )}
             </label>
             <label className="auth-label">
               Color
               <input
-                className="auth-input"
+                className={`auth-input ${fieldErrors.color ? 'has-error' : ''}`}
                 placeholder="e.g. Navy Blue, Black, White"
                 value={color}
-                onChange={(e) => setColor(e.target.value)}
+                onChange={(e) => {
+                  setColor(e.target.value);
+                  if (fieldErrors.color) setFieldErrors((prev) => ({ ...prev, color: '' }));
+                  if (error) setError(null);
+                }}
               />
+              {fieldErrors.color && (
+                <span className="field-error-msg">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {fieldErrors.color}
+                </span>
+              )}
             </label>
           </div>
 
@@ -82,25 +164,53 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
             <label className="auth-label">
               Price (₹) *
               <input
-                className="auth-input"
+                className={`auth-input ${fieldErrors.price ? 'has-error' : ''}`}
                 type="number"
                 min="0"
                 step="any"
                 value={price}
-                onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                onChange={(e) => {
+                  setPrice(e.target.value === '' ? '' : Number(e.target.value));
+                  if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: '' }));
+                  if (error) setError(null);
+                }}
                 required
               />
+              {fieldErrors.price && (
+                <span className="field-error-msg">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {fieldErrors.price}
+                </span>
+              )}
             </label>
             <label className="auth-label">
               Stock Quantity *
               <input
-                className="auth-input"
+                className={`auth-input ${fieldErrors.stock ? 'has-error' : ''}`}
                 type="number"
                 min="0"
                 value={stock}
-                onChange={(e) => setStock(e.target.value === '' ? '' : Number(e.target.value))}
+                onChange={(e) => {
+                  setStock(e.target.value === '' ? '' : Number(e.target.value));
+                  if (fieldErrors.stock) setFieldErrors((prev) => ({ ...prev, stock: '' }));
+                  if (error) setError(null);
+                }}
                 required
               />
+              {fieldErrors.stock && (
+                <span className="field-error-msg">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {fieldErrors.stock}
+                </span>
+              )}
             </label>
           </div>
 
