@@ -148,6 +148,28 @@ export interface Order {
   address?: AddressResponse;
 }
 
+export interface OrderTransLog {
+  transLogId: number | null;
+  orderId: number;
+  fromState: string | null;
+  toState: string;
+  createdBy: string;
+  createdAt: string;
+  title: string;
+  description: string;
+}
+
+export interface OrderTracking {
+  orderId: number;
+  currentStatus: string;
+  createdAt: string;
+  totalAmount: string;
+  user?: User | null;
+  address?: AddressResponse | null;
+  items: OrderItem[];
+  logs: OrderTransLog[];
+}
+
 export interface User {
   id: number,
   username: string,

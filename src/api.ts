@@ -22,6 +22,7 @@ import type {
   PaymentOrderRequest,
   SignupRequest,
   LoginRequest,
+  OrderTracking,
 } from './types';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8080';
@@ -223,6 +224,20 @@ export function getAllOrders(): Promise<Order[]> {
 export function getOrderById(id: number | string): Promise<Order> {
   return request<Order>(ORDER_BASE_URL, `/orders/${id}`, {
     headers: authHeader(),
+  });
+}
+
+export function getOrderTracking(orderId: number | string): Promise<OrderTracking> {
+  return request<OrderTracking>(ORDER_BASE_URL, `/orders/${orderId}/tracking`, {
+    headers: authHeader(),
+  });
+}
+
+export function changeOrderStatus(orderId: number | string, from: string, to: string): Promise<void> {
+  return request<void>(ORDER_BASE_URL, '/order/state/change-status', {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify({ orderId: String(orderId), from, to }),
   });
 }
 
