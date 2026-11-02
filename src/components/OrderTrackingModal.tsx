@@ -113,34 +113,7 @@ export default function OrderTrackingModal({ order, onClose, onStatusUpdated }: 
       setTrackingData(data);
     } catch (err) {
       console.warn('Could not fetch tracking from backend, falling back to order object:', err);
-      // Fallback synthetic tracking data if backend endpoint is unavailable
       if (order) {
-        const syntheticLogs: OrderTransLog[] = isAdmin ? [
-          {
-            transLogId: 1,
-            orderId: order.bookingId,
-            fromState: null,
-            toState: 'CREATED',
-            createdBy: order.username || 'CUSTOMER',
-            createdAt: order.createdAt,
-            title: 'Order Placed',
-            description: 'Your order was successfully recorded and queued for processing.',
-          },
-        ] : [];
-
-        if (isAdmin && order.status && order.status.toUpperCase() !== 'CREATED') {
-          syntheticLogs.push({
-            transLogId: 2,
-            orderId: order.bookingId,
-            fromState: 'CREATED',
-            toState: order.status.toUpperCase(),
-            createdBy: 'SYSTEM',
-            createdAt: order.createdAt,
-            title: `Order ${order.status}`,
-            description: `Order status moved to ${order.status}.`,
-          });
-        }
-
         setTrackingData({
           orderId: order.bookingId,
           currentStatus: order.status || 'CREATED',
@@ -149,7 +122,7 @@ export default function OrderTrackingModal({ order, onClose, onStatusUpdated }: 
           user: order.user,
           address: order.address,
           items: order.items || [],
-          logs: syntheticLogs,
+          logs: [],
         });
       }
     } finally {
