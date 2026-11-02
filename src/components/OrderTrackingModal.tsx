@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getOrderTracking, changeOrderStatus, formatINR, getErrorMessage } from '../api';
-import type { Order, OrderTracking, OrderTransLog } from '../types';
+import type { Order, OrderTracking } from '../types';
 
 interface OrderTrackingModalProps {
   order: Order | null;
