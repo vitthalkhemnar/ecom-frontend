@@ -20,9 +20,8 @@ export default function ProfilePage() {
     if (!isAuthenticated) return;
     getUserDetails()
       .then((data) => {
-        const u = Array.isArray(data) ? data[0] : data;
-        setUser(u);
-        setEmailInput(u?.email || '');
+        setUser(data);
+        setEmailInput(data?.email || '');
         setStatus('ready');
       })
       .catch(() => setStatus('error'));

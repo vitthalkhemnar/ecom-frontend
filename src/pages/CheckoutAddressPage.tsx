@@ -186,8 +186,7 @@ export default function CheckoutAddressPage() {
     orderPlacedRef.current = false;
 
     try {
-      const userDetails = await getUserDetails();
-      const user = Array.isArray(userDetails) ? userDetails[0] : userDetails;
+      const user = await getUserDetails();
 
       /*
        * STEP 1

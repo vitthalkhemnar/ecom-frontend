@@ -62,8 +62,7 @@ export default function OrderDetailPage() {
         // Fallback for user if not populated by backend
         if (!data.user) {
           try {
-            const users = await getUserDetails();
-            const u = Array.isArray(users) ? users[0] : users;
+            const u = await getUserDetails();
             if (u) setFallbackUser(u);
           } catch {
             // Ignore fallback errors

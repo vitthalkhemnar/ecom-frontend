@@ -373,10 +373,11 @@ export function changeOrderStatus(orderId: number | string, from: string, to: st
   });
 }
 
-export function getUserDetails(): Promise<User[]> {
-  return request<User[]>(AUTH_BASE_URL, '/user', {
+export async function getUserDetails(): Promise<User> {
+  const data = await request<User | User[]>(AUTH_BASE_URL, '/user', {
     headers: authHeader(),
   });
+  return Array.isArray(data) ? data[0] : data;
 }
 
 export function getAdminUsers(): Promise<User[]> {
