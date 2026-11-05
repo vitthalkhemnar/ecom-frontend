@@ -273,9 +273,17 @@ export function confirmOrder(orderId: number | string): Promise<Order> {
   });
 }
 
-export function rollbackOrder(orderId: number | string, reason?: string): Promise<Order> {
+export function rollbackOrder(orderId: number | string, reason?: string): Promise<void> {
   const query = reason ? `?reason=${encodeURIComponent(reason)}` : '';
-  return request<Order>(ORDER_BASE_URL, `/orders/${orderId}/rollback${query}`, {
+  return request<void>(ORDER_BASE_URL, `/orders/${orderId}/rollback${query}`, {
+    method: 'POST',
+    headers: authHeader(),
+  });
+}
+
+export function markOrderFailed(orderId: number | string, reason?: string): Promise<Order> {
+  const query = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+  return request<Order>(ORDER_BASE_URL, `/orders/${orderId}/fail${query}`, {
     method: 'POST',
     headers: authHeader(),
   });

@@ -11,6 +11,7 @@ import {
   createOrder,
   confirmOrder,
   rollbackOrder,
+  markOrderFailed,
   createPaymentOrder,
   verifyPayment,
   getUserDetails,
@@ -64,6 +65,36 @@ export default function CheckoutAddressPage() {
       navigate('/cart', { replace: true });
     }
   }, []);
+
+  // Prevent browser navigation, back button, and tab closing while payment is processing
+  useEffect(() => {
+    if (!placingOrder) return;
+
+    // Trap Browser Back Arrow using history.pushState + popstate
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      // Re-push state to keep user on checkout page
+      window.history.pushState(null, '', window.location.href);
+      toast.error("Payment in progress! Please do not use the browser back button.", {
+        id: "payment-back-warning",
+      });
+    };
+
+    // Trap page refresh or tab close
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [placingOrder]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -155,10 +186,20 @@ export default function CheckoutAddressPage() {
        * STEP 2
        * Create Razorpay order using the bookingId.
        */
-      const razorpayOrder = await createPaymentOrder({
-        amount: totalPrice,
-        orderId: currentOrderId,
-      });
+      let razorpayOrder;
+      try {
+        razorpayOrder = await createPaymentOrder({
+          amount: totalPrice,
+          orderId: currentOrderId,
+        });
+      } catch (payOrderErr) {
+        try {
+          await rollbackOrder(currentOrderId, "Payment order initialization failed");
+        } catch (rbErr) {
+          console.error("Order rollback error:", rbErr);
+        }
+        throw payOrderErr;
+      }
 
       /*
        * STEP 3
@@ -184,6 +225,7 @@ export default function CheckoutAddressPage() {
 
         handler: async (response: RazorpayPaymentResponse) => {
           orderPlacedRef.current = true;
+          let paymentVerified = false;
 
           try {
             /*
@@ -200,11 +242,14 @@ export default function CheckoutAddressPage() {
               try {
                 await rollbackOrder(currentOrderId, "Payment verification signature mismatch");
               } catch (rbErr) {
-                console.error("Order rollback error:", rbErr);
+                console.error("Order rollback error on verification mismatch:", rbErr);
               }
               toast.error("Payment failed. Please try again.");
               return;
             }
+
+            // Payment successfully verified by payment-service
+            paymentVerified = true;
 
             /*
              * STEP 5
@@ -239,12 +284,24 @@ export default function CheckoutAddressPage() {
             navigate(`/orders/${currentOrderId}`);
           } catch (error: unknown) {
             console.error("Payment verification/post-payment error:", error);
-            try {
-              await rollbackOrder(currentOrderId, "Post-payment processing failed");
-            } catch (rbErr) {
-              console.error("Order rollback error on catch:", rbErr);
+            if (paymentVerified) {
+              // Payment succeeded but downstream error occurred (e.g. during confirmOrder)
+              // Mark order as FAILED (do NOT delete, as money was deducted)
+              try {
+                await markOrderFailed(currentOrderId, "System error after successful payment");
+              } catch (failErr) {
+                console.error("Failed to mark order as FAILED:", failErr);
+              }
+              toast.error("Payment succeeded, but an issue occurred while finalizing your order. Please contact support.");
+            } else {
+              // Payment verification failed or threw before payment was confirmed
+              try {
+                await rollbackOrder(currentOrderId, "Payment verification failed");
+              } catch (rbErr) {
+                console.error("Order rollback error on catch:", rbErr);
+              }
+              toast.error("Payment failed. Please try again.");
             }
-            toast.error("Payment failed. Please try again.");
           } finally {
             setPlacingOrder(false);
           }
@@ -423,6 +480,33 @@ export default function CheckoutAddressPage() {
           onSave={handleSaveAddress}
           onClose={() => setShowForm(false)}
         />
+      )}
+
+      {/* Full-Screen Freeze Overlay while Payment is Processing */}
+      {placingOrder && (
+        <div className="payment-freeze-overlay" role="dialog" aria-modal="true" aria-label="Processing Payment">
+          <div className="payment-freeze-card">
+            <div className="payment-freeze-spinner" />
+            <div className="payment-freeze-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <h3 className="payment-freeze-title">Processing Payment Securely</h3>
+            <p className="payment-freeze-desc">
+              Please wait while your transaction is being processed.
+            </p>
+            <div className="payment-freeze-warning">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>Do not refresh, close the tab, or press the browser back button.</span>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
