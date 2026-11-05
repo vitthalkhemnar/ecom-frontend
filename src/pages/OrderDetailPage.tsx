@@ -6,6 +6,20 @@ import type { Order, AddressResponse, User } from '../types';
 
 type Status = 'loading' | 'ready' | 'error';
 
+function formatOrderDate(dateVal?: string | null): string {
+  if (!dateVal) return '—';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return String(dateVal);
+    return d.toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  } catch {
+    return String(dateVal);
+  }
+}
+
 function OrderItemThumbnail({ src, alt }: { src?: string | null; alt: string }) {
   const [error, setError] = useState(false);
   if (!src || error) {
@@ -99,10 +113,7 @@ export default function OrderDetailPage() {
   const isDelivered = normStatus === 'DELIVERED';
   const statusType = isFailed ? 'failed' : isDelivered ? 'delivered' : 'confirmed';
 
-  const formattedDate = new Date(order.createdAt).toLocaleString('en-IN', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  const formattedDate = formatOrderDate(order.createdAt);
 
   const resolvedUser = order.user || fallbackUser;
   const resolvedAddress = order.address || fallbackAddress;

@@ -118,7 +118,17 @@ export default function OrdersTab() {
                 <tr key={order.bookingId}>
                   <td data-label="Order ID" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>#{order.bookingId}</td>
                   <td data-label="Customer" className="admin-cell-muted">{order.user?.firstName} {order.user?.lastName}</td>
-                  <td data-label="Date" className="admin-cell-muted">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td data-label="Date" className="admin-cell-muted">
+                    {(() => {
+                      if (!order.createdAt) return '—';
+                      try {
+                        const d = new Date(order.createdAt);
+                        return isNaN(d.getTime()) ? String(order.createdAt) : d.toLocaleDateString();
+                      } catch {
+                        return String(order.createdAt);
+                      }
+                    })()}
+                  </td>
                   <td data-label="Items">{order.items.length}</td>
                   <td data-label="Status">
                     <span className={`variant-stock ${statusClass(order.status)}`}>{order.status}</span>
