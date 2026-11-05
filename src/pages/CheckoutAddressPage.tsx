@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -43,7 +43,10 @@ export default function CheckoutAddressPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const orderItems: CreateOrderItem[] = location.state?.orderItems ?? [];
+  const orderItems: CreateOrderItem[] = useMemo(
+    () => location.state?.orderItems ?? [],
+    [location.state?.orderItems]
+  );
 
   const effectiveOrderItems: CreateOrderItem[] = orderItems.length > 0
     ? orderItems
@@ -57,13 +60,24 @@ export default function CheckoutAddressPage() {
         priceAtBooking: String(item.price),
       }));
 
-  // Initial redirect: only if cart was already empty upon opening checkout
+  const effectiveTotalPrice = useMemo(() => {
+    if (orderItems.length > 0) {
+      return orderItems.reduce((acc, item) => {
+        const qty = Number(item.quantity) || 1;
+        const price = Number(item.priceAtBooking) || 0;
+        return acc + price * qty;
+      }, 0);
+    }
+    return totalPrice;
+  }, [orderItems, totalPrice]);
+
+  // Initial redirect: only if neither cart nor direct order items exist
   useEffect(() => {
-    if (!orderPlacedRef.current && items.length === 0) {
+    if (!orderPlacedRef.current && items.length === 0 && orderItems.length === 0) {
       navigate('/cart', { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [items.length, orderItems.length]);
 
   // Prevent browser navigation, back button, and tab closing while payment is processing
   useEffect(() => {
@@ -159,7 +173,7 @@ export default function CheckoutAddressPage() {
   }
 
   async function handlePlaceOrder() {
-    if (!isAuthenticated || items.length === 0 || selectedId === null) {
+    if (!isAuthenticated || effectiveOrderItems.length === 0 || selectedId === null) {
       return;
     }
 
@@ -176,7 +190,7 @@ export default function CheckoutAddressPage() {
        * (No confirmation email is sent here).
        */
       const order = await createOrder({
-        totalAmount: totalPrice.toFixed(2),
+        totalAmount: effectiveTotalPrice.toFixed(2),
         addressId: selectedId,
         items: effectiveOrderItems,
       });
@@ -193,7 +207,7 @@ export default function CheckoutAddressPage() {
       let razorpayOrder;
       try {
         razorpayOrder = await createPaymentOrder({
-          amount: totalPrice,
+          amount: effectiveTotalPrice,
           orderId: currentOrderId,
         });
       } catch (payOrderErr) {
@@ -222,7 +236,7 @@ export default function CheckoutAddressPage() {
 
         order_id: razorpayOrder.id,
 
-        prefill: { email: user.email, contact: user.phone },
+        prefill: { email: user?.email, contact: user?.phone },
 
         method: "upi",
         upi: { qr: true },
@@ -254,12 +268,12 @@ export default function CheckoutAddressPage() {
              * Remove purchased items from cart after successful payment.
              */
             try {
-              for (const item of items) {
+              for (const item of effectiveOrderItems) {
                 await removeItem({
                   productId: item.productId,
                   variantId: item.variantId,
-                  price: item.price,
-                  quantity: item.quantity,
+                  price: Number(item.priceAtBooking) || 0,
+                  quantity: Number(item.quantity) || 1,
                 });
               }
             } catch (cartError) {
@@ -479,16 +493,16 @@ export default function CheckoutAddressPage() {
 
           <div className="cart-total" style={{ marginTop: 32 }}>
             <span>Order total</span>
-            <span>{formatINR(totalPrice)}</span>
+            <span>{formatINR(effectiveTotalPrice)}</span>
           </div>
 
           <button
             type="button"
             className="checkout-btn"
             onClick={handlePlaceOrder}
-            disabled={selectedId === null || placingOrder || items.length === 0}
+            disabled={selectedId === null || placingOrder || effectiveOrderItems.length === 0}
           >
-            {placingOrder ? "Processing payment…" : `Pay ${formatINR(totalPrice)}`}
+            {placingOrder ? "Processing payment…" : `Pay ${formatINR(effectiveTotalPrice)}`}
           </button>
         </>
       )}
