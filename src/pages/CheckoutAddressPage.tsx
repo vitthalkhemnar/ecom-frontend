@@ -9,9 +9,7 @@ import {
   updateAddress,
   deleteAddress,
   createOrder,
-  confirmOrder,
   rollbackOrder,
-  markOrderFailed,
   createPaymentOrder,
   verifyPayment,
   getUserDetails,
@@ -229,42 +227,29 @@ export default function CheckoutAddressPage() {
 
         handler: async (response: RazorpayPaymentResponse) => {
           orderPlacedRef.current = true;
-          let paymentVerified = false;
 
           try {
             /*
              * STEP 4
              * Verify Razorpay payment signature on backend.
+             * Backend payment-service automatically publishes PaymentSuccessEvent / PaymentFailedEvent
+             * to Kafka, updating order-service state asynchronously.
              */
             const isVerified = await verifyPayment({
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              orderId: Number(currentOrderId),
             });
 
             if (!isVerified) {
-              try {
-                await rollbackOrder(currentOrderId, "Payment verification signature mismatch");
-              } catch (rbErr) {
-                console.error("Order rollback error on verification mismatch:", rbErr);
-              }
               toast.error("Payment failed. Please try again.");
               return;
             }
 
-            // Payment successfully verified by payment-service
-            paymentVerified = true;
-
             /*
              * STEP 5
-             * Confirm order state to CONFIRMED.
-             * This triggers the order confirmation email via Kafka.
-             */
-            await confirmOrder(currentOrderId);
-
-            /*
-             * STEP 6
-             * Remove purchased items from cart only after confirmation.
+             * Remove purchased items from cart after successful payment.
              */
             try {
               for (const item of items) {
@@ -282,30 +267,13 @@ export default function CheckoutAddressPage() {
             toast.success("Payment successful. Order placed!");
 
             /*
-             * STEP 7
+             * STEP 6
              * Navigate to order confirmation page.
              */
             navigate(`/orders/${currentOrderId}`);
           } catch (error: unknown) {
-            console.error("Payment verification/post-payment error:", error);
-            if (paymentVerified) {
-              // Payment succeeded but downstream error occurred (e.g. during confirmOrder)
-              // Mark order as FAILED (do NOT delete, as money was deducted)
-              try {
-                await markOrderFailed(currentOrderId, "System error after successful payment");
-              } catch (failErr) {
-                console.error("Failed to mark order as FAILED:", failErr);
-              }
-              toast.error("Payment succeeded, but an issue occurred while finalizing your order. Please contact support.");
-            } else {
-              // Payment verification failed or threw before payment was confirmed
-              try {
-                await rollbackOrder(currentOrderId, "Payment verification failed");
-              } catch (rbErr) {
-                console.error("Order rollback error on catch:", rbErr);
-              }
-              toast.error("Payment failed. Please try again.");
-            }
+            console.error("Payment verification error:", error);
+            toast.error("Payment failed. Please try again.");
           } finally {
             setPlacingOrder(false);
           }

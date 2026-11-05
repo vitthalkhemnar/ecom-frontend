@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { formatINR, cleanValue } from '../api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -254,10 +254,13 @@ export default function ProductVariantSelector({
     return variants[0] || null;
   }, [variants, hasSizes, hasColors, selectedSize, selectedColor]);
 
-  // Sync variant image and details with parent
+  // Sync variant image and details with parent only when variantId actually changes
+  const lastVariantIdRef = useRef<number | null | undefined>(undefined);
   useEffect(() => {
-    if (onVariantChange) {
-      onVariantChange(currentVariant);
+    const curId = currentVariant ? currentVariant.variantId : null;
+    if (lastVariantIdRef.current !== curId) {
+      lastVariantIdRef.current = curId;
+      onVariantChange?.(currentVariant);
     }
   }, [currentVariant, onVariantChange]);
 

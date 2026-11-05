@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { formatINR } from '../api';
+import { formatINR, parseProductImages } from '../api';
 import type { Product } from '../types';
 
 interface ProductCardProps {
@@ -9,7 +9,8 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
-  const image = !imageError && product.images && product.images.length > 0 ? product.images[0] : null;
+  const images = parseProductImages(product.images);
+  const image = !imageError && images.length > 0 ? images[0] : null;
 
   return (
     <Link to={`/product/${product.id}`} className="product-card">

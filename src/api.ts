@@ -245,6 +245,31 @@ export function cleanValue(val?: string | null): string {
   return val.trim();
 }
 
+export function getValidImageUrl(val?: string | null): string | null {
+  const clean = cleanValue(val);
+  if (!clean) return null;
+  const lower = clean.toLowerCase();
+  if (lower === 'null' || lower === 'undefined') return null;
+  return clean;
+}
+
+export function parseProductImages(images?: string[] | string | null): string[] {
+  if (!images) return [];
+  if (Array.isArray(images)) {
+    return images
+      .flatMap((img) => (typeof img === 'string' ? img.split(',') : []))
+      .map(getValidImageUrl)
+      .filter((img): img is string => Boolean(img));
+  }
+  if (typeof images === 'string') {
+    return images
+      .split(',')
+      .map(getValidImageUrl)
+      .filter((img): img is string => Boolean(img));
+  }
+  return [];
+}
+
 export function formatINR(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
   return new Intl.NumberFormat('en-IN', {

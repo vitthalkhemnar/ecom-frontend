@@ -246,6 +246,7 @@ export interface PaymentVerificationRequest {
   razorpayOrderId: string;
   razorpayPaymentId: string;
   razorpaySignature: string;
+  orderId?: number;
 }
 
 export interface ErrorResponse {
