@@ -46,22 +46,34 @@ export default function OrdersTab() {
   const visibleOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
     const filtered = term
-      ? orders.filter((o) =>
-          `${o.username} ${o.bookingId} ${o.status}`.toLowerCase().includes(term)
-        )
+      ? orders.filter((o) => {
+          const username = o.username || '';
+          const bookingId = String(o.bookingId || '');
+          const status = o.status || '';
+          const customerName = `${o.user?.firstName || ''} ${o.user?.lastName || ''}`.trim();
+          return `${username} ${bookingId} ${status} ${customerName}`.toLowerCase().includes(term);
+        })
       : orders;
 
     return [...filtered].sort((a, b) => {
-      if (sortKey === 'date') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      if (sortKey === 'total') return Number(b.totalAmount) - Number(a.totalAmount);
-      return a.username.localeCompare(b.username);
+      if (sortKey === 'date') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      if (sortKey === 'total') return Number(b.totalAmount || 0) - Number(a.totalAmount || 0);
+      const userA = a.username || '';
+      const userB = b.username || '';
+      return userA.localeCompare(userB);
     }).slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
   }, [orders, search, sortKey, page]);
 
   const totalPages = useMemo(() => {
     const term = search.trim().toLowerCase();
     const count = term
-      ? orders.filter((o) => `${o.username} ${o.bookingId} ${o.status}`.toLowerCase().includes(term)).length
+      ? orders.filter((o) => {
+          const username = o.username || '';
+          const bookingId = String(o.bookingId || '');
+          const status = o.status || '';
+          const customerName = `${o.user?.firstName || ''} ${o.user?.lastName || ''}`.trim();
+          return `${username} ${bookingId} ${status} ${customerName}`.toLowerCase().includes(term);
+        }).length
       : orders.length;
     return Math.max(1, Math.ceil(count / PAGE_SIZE));
   }, [orders, search]);

@@ -37,14 +37,26 @@ export default function UsersTab() {
   const visibleUsers = useMemo(() => {
     const term = search.trim().toLowerCase();
     const filtered = term
-      ? users.filter((u) =>
-          `${u.firstName} ${u.lastName} ${u.username} ${u.email}`.toLowerCase().includes(term)
-        )
+      ? users.filter((u) => {
+          const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+          const username = u.username || '';
+          const email = u.email || '';
+          const phone = u.phone || '';
+          return `${fullName} ${username} ${email} ${phone}`.toLowerCase().includes(term);
+        })
       : users;
 
     return [...filtered].sort((a, b) => {
-      if (sortKey === 'name') return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
-      if (sortKey === 'username') return a.username.localeCompare(b.username);
+      if (sortKey === 'name') {
+        const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+        const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+        return nameA.localeCompare(nameB);
+      }
+      if (sortKey === 'username') {
+        const userA = a.username || a.email || '';
+        const userB = b.username || b.email || '';
+        return userA.localeCompare(userB);
+      }
       return Number(b.isAdmin) - Number(a.isAdmin);
     }).slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
   }, [users, search, sortKey, page]);
@@ -52,7 +64,13 @@ export default function UsersTab() {
   const totalPages = useMemo(() => {
     const term = search.trim().toLowerCase();
     const count = term
-      ? users.filter((u) => `${u.firstName} ${u.lastName} ${u.username} ${u.email}`.toLowerCase().includes(term)).length
+      ? users.filter((u) => {
+          const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+          const username = u.username || '';
+          const email = u.email || '';
+          const phone = u.phone || '';
+          return `${fullName} ${username} ${email} ${phone}`.toLowerCase().includes(term);
+        }).length
       : users.length;
     return Math.max(1, Math.ceil(count / PAGE_SIZE));
   }, [users, search]);
@@ -123,10 +141,10 @@ export default function UsersTab() {
             <tbody>
               {visibleUsers.map((user) => (
                 <tr key={user.id}>
-                  <td data-label="Name" className="admin-cell-primary">{user.firstName} {user.lastName}</td>
-                  <td data-label="Username" className="admin-cell-muted">@{user.username}</td>
-                  <td data-label="Email" className="admin-cell-muted">{user.email}</td>
-                  <td data-label="Phone" className="admin-cell-muted">{user.phone}</td>
+                  <td data-label="Name" className="admin-cell-primary">{`${user.firstName || ''} ${user.lastName || ''}`.trim() || '—'}</td>
+                  <td data-label="Username" className="admin-cell-muted">@{user.username || user.email?.split('@')[0] || `user_${user.id}`}</td>
+                  <td data-label="Email" className="admin-cell-muted">{user.email || '—'}</td>
+                  <td data-label="Phone" className="admin-cell-muted">{user.phone || '—'}</td>
                   <td data-label="Role">
                     <span className={`variant-stock ${user.isAdmin ? 'in' : 'low'}`}>
                       {user.isAdmin ? 'Admin' : 'User'}
@@ -141,7 +159,7 @@ export default function UsersTab() {
                         type="button"
                         className="admin-delete-btn"
                         onClick={() => handleDelete(user)}
-                        disabled={user.username === currentUsername}
+                        disabled={Boolean(user.username && user.username === currentUsername) || Boolean(user.email && user.email === currentUsername)}
                       >
                         Delete
                       </button>
