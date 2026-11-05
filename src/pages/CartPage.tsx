@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { getProducts, getVariants, formatINR } from '../api';
+import { getProducts, getVariants, formatINR, cleanValue } from '../api';
 import type { CreateOrderItem, Product, Variant } from '../types';
 
 export default function CartPage() {
@@ -58,8 +58,8 @@ export default function CartPage() {
          productId: item.productId,
          variantId: item.variantId,
          productName: product?.productName ?? `Product #${item.productId}`,
-         size: variant?.size ?? '',
-         color: variant?.color ?? '',
+         size: cleanValue(variant?.size),
+         color: cleanValue(variant?.color),
          quantity: String(item.quantity),
          priceAtBooking: String(item.price),
        };
@@ -116,6 +116,10 @@ export default function CartPage() {
               const variant = findVariant(item.productId, item.variantId);
               const image = product?.images && product.images.length > 0 ? product.images[0] : null;
 
+              const displayColor = cleanValue(variant?.color);
+              const displaySize = cleanValue(variant?.size);
+              const variantLabel = [displayColor, displaySize].filter(Boolean).join(' · ') || (variant ? 'Standard' : 'Variant');
+
               return (
                 <div className="cart-row" key={key}>
                   <Link to={`/product/${item.productId}`} className="cart-row-link">
@@ -138,9 +142,7 @@ export default function CartPage() {
                       </span>
                       {product && <span className="cart-row-brand">{product.brand}</span>}
                       <span className="cart-row-variant">
-                        {variant ? (variant.color || 'Standard') : 'Variant'}
-                        {variant?.size ? ` · ${variant.size}` : ''}
-                        {variant ? ` · ${variant.sku}` : ''}
+                        {variantLabel}
                       </span>
                     </div>
                   </Link>

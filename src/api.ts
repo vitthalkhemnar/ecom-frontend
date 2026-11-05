@@ -221,6 +221,24 @@ export function getVariants(productId: number | string): Promise<Variant[]> {
   });
 }
 
+export function isNotApplicable(val?: string | null): boolean {
+  if (!val) return true;
+  const normalized = val.trim().toLowerCase();
+  return (
+    normalized === 'na' ||
+    normalized === 'n/a' ||
+    normalized === 'not applicable' ||
+    normalized === 'not_applicable' ||
+    normalized === 'none' ||
+    normalized === '-'
+  );
+}
+
+export function cleanValue(val?: string | null): string {
+  if (!val || isNotApplicable(val)) return '';
+  return val.trim();
+}
+
 export function formatINR(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
   return new Intl.NumberFormat('en-IN', {

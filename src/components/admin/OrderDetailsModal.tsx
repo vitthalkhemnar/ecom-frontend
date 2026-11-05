@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Order } from '../../types';
 import OrderTrackingModal from '../OrderTrackingModal';
+import { cleanValue } from '../../api';
 
 interface OrderDetailsModalProps {
   order: Order;
@@ -82,7 +83,7 @@ export default function OrderDetailsModal({ order, onClose, onStatusUpdated }: O
                 <tr key={item.bookingItemId}>
                   <td>{item.productName}</td>
                   <td className="admin-cell-muted">
-                    {[item.color, item.size].filter(Boolean).join(' · ') || 'Standard'}
+                    {[cleanValue(item.color), cleanValue(item.size)].filter(Boolean).join(' · ') || 'Standard'}
                   </td>
                   <td>{item.quantity}</td>
                   <td>₹{item.priceAtBooking}</td>

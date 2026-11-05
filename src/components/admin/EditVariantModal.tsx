@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Variant } from '../../types';
-import { getErrorMessage, ApiError } from '../../api';
+import { getErrorMessage, ApiError, cleanValue } from '../../api';
 
 interface EditVariantModalProps {
   variant: Variant;
@@ -9,8 +9,8 @@ interface EditVariantModalProps {
 }
 
 export default function EditVariantModal({ variant, onSave, onClose }: EditVariantModalProps) {
-  const [size, setSize] = useState(variant.size ?? '');
-  const [color, setColor] = useState(variant.color ?? '');
+  const [size, setSize] = useState(cleanValue(variant.size));
+  const [color, setColor] = useState(cleanValue(variant.color));
   const [price, setPrice] = useState<number | ''>(variant.price ?? '');
   const [stock, setStock] = useState<number | ''>(variant.stock ?? '');
   const [active, setActive] = useState(variant.active ?? true);
@@ -21,7 +21,9 @@ export default function EditVariantModal({ variant, onSave, onClose }: EditVaria
   function validate(): Record<string, string> {
     const errs: Record<string, string> = {};
 
-    if (!size.trim() && !color.trim()) {
+    const cleanS = cleanValue(size);
+    const cleanC = cleanValue(color);
+    if (!cleanS && !cleanC) {
       errs.size = 'Either Size or Color must be provided.';
       errs.color = 'Either Size or Color must be provided.';
     }
@@ -56,8 +58,8 @@ export default function EditVariantModal({ variant, onSave, onClose }: EditVaria
     try {
       await onSave({
         variantId: variant.variantId,
-        size: size.trim() || null,
-        color: color.trim() || null,
+        size: cleanValue(size) || null,
+        color: cleanValue(color) || null,
         price: Number(price),
         stock: Number(stock),
         active,
@@ -105,11 +107,6 @@ export default function EditVariantModal({ variant, onSave, onClose }: EditVaria
         )}
 
         <form onSubmit={handleSave} className="modal-fields" noValidate>
-          <label className="auth-label">
-            SKU
-            <input className="auth-input" value={variant.sku} disabled style={{ background: 'var(--sand, #f8f8f8)', cursor: 'not-allowed' }} />
-          </label>
-
           <div className="auth-field-row">
             <label className="auth-label">
               Size
@@ -162,19 +159,18 @@ export default function EditVariantModal({ variant, onSave, onClose }: EditVaria
 
           <div className="auth-field-row">
             <label className="auth-label">
-              Price (₹) *
+              Price (₹)
               <input
-                className={`auth-input ${fieldErrors.price ? 'has-error' : ''}`}
                 type="number"
+                step="0.01"
                 min="0"
-                step="any"
+                className={`auth-input ${fieldErrors.price ? 'has-error' : ''}`}
                 value={price}
                 onChange={(e) => {
                   setPrice(e.target.value === '' ? '' : Number(e.target.value));
                   if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: '' }));
                   if (error) setError(null);
                 }}
-                required
               />
               {fieldErrors.price && (
                 <span className="field-error-msg">
@@ -189,18 +185,17 @@ export default function EditVariantModal({ variant, onSave, onClose }: EditVaria
             </label>
 
             <label className="auth-label">
-              Stock Units *
+              Stock Quantity
               <input
-                className={`auth-input ${fieldErrors.stock ? 'has-error' : ''}`}
                 type="number"
                 min="0"
+                className={`auth-input ${fieldErrors.stock ? 'has-error' : ''}`}
                 value={stock}
                 onChange={(e) => {
                   setStock(e.target.value === '' ? '' : Number(e.target.value));
                   if (fieldErrors.stock) setFieldErrors((prev) => ({ ...prev, stock: '' }));
                   if (error) setError(null);
                 }}
-                required
               />
               {fieldErrors.stock && (
                 <span className="field-error-msg">
@@ -215,17 +210,22 @@ export default function EditVariantModal({ variant, onSave, onClose }: EditVaria
             </label>
           </div>
 
-          <label className="admin-role-toggle">
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-            Active (visible to shoppers)
+          <label className="auth-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '4px' }}>
+            <input
+              type="checkbox"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+              style={{ width: 'auto', margin: 0 }}
+            />
+            <span>Active (available for purchase)</span>
           </label>
 
-          <div className="modal-actions" style={{ marginTop: '16px' }}>
+          <div className="modal-actions">
             <button type="button" className="admin-cancel-btn" onClick={onClose} disabled={saving}>
               Cancel
             </button>
             <button type="submit" className="admin-save-btn" disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? 'Saving…' : 'Save changes'}
             </button>
           </div>
         </form>

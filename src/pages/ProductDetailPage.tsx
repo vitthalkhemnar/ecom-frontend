@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import VariantCard from '../components/VariantCard';
-import { getProductById, getVariants, formatINR } from '../api';
+import { getProductById, getVariants, formatINR, cleanValue } from '../api';
 import type { Product, Variant } from '../types';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -68,6 +68,14 @@ export default function ProductDetailPage() {
   // const savings = product.price * (product.discount / 100);
   // const now = original - savings;
   const attrEntries = Object.entries(product.attributes || {});
+  const visibleAttrs = attrEntries.filter(([key, value]) => {
+    const normKey = key.toLowerCase();
+    if (normKey === 'sku' || normKey === 'product_code' || normKey === 'product_id' || normKey === 'id') {
+      return false;
+    }
+    return Boolean(cleanValue(String(value)));
+  });
+  const hasMaterial = Boolean(cleanValue(product.material));
   const image = product.images && product.images.length > 0 ? product.images[0] : null;
 
   return (
@@ -84,7 +92,7 @@ export default function ProductDetailPage() {
         <div>
           <span className="detail-eyebrow">{product.category} · {product.subcategory}</span>
           <h1 className="detail-title">{product.productName}</h1>
-          <div className="detail-brand">{product.brand} · {product.productCode}</div>
+          <div className="detail-brand">{product.brand}</div>
 
           <div className="detail-price-row">
             <span className="detail-price-now">{formatINR(product.price)}</span>
@@ -96,15 +104,15 @@ export default function ProductDetailPage() {
 
           <p className="detail-desc">{product.description}</p>
 
-          {attrEntries.length > 0 && (
+          {(hasMaterial || visibleAttrs.length > 0) && (
             <dl className="attr-table">
-              {product.material && (
+              {hasMaterial && (
                 <>
                   <dt>Material</dt>
-                  <dd>{product.material}</dd>
+                  <dd>{cleanValue(product.material)}</dd>
                 </>
               )}
-              {attrEntries.map(([key, value]) => (
+              {visibleAttrs.map(([key, value]) => (
                 <span key={key} style={{ display: 'contents' }}>
                   <dt>{key.replaceAll('_', ' ')}</dt>
                   <dd>{String(value)}</dd>

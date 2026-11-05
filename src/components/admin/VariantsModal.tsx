@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getVariants, updateVariant, deleteVariant, createVariant, getErrorMessage } from '../../api';
+import { getVariants, updateVariant, deleteVariant, createVariant, getErrorMessage, cleanValue } from '../../api';
 import EditVariantModal from './EditVariantModal';
 import AddVariantModal from './AddVariantModal';
 import type { Product, Variant, CreateVariantRequest } from '../../types';
@@ -123,7 +123,6 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
           <table className="admin-table">
             <thead>
               <tr>
-                <th>SKU</th>
                 <th>Size</th>
                 <th>Color</th>
                 <th>Price</th>
@@ -134,9 +133,8 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
             <tbody>
               {variants.map((v) => (
                 <tr key={v.variantId}>
-                  <td className="admin-cell-muted">{v.sku}</td>
-                  <td>{v.size || '—'}</td>
-                  <td>{v.color || '—'}</td>
+                  <td>{cleanValue(v.size) || '—'}</td>
+                  <td>{cleanValue(v.color) || '—'}</td>
                   <td>₹{v.price}</td>
                   <td>{v.stock}</td>
                   <td>

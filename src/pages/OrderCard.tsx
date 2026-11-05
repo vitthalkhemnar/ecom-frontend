@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { formatINR } from '../api';
+import { formatINR, cleanValue } from '../api';
 import type { Order } from '../types';
 
 interface OrderCardProps {
@@ -103,6 +103,8 @@ export default function OrderCard({ order, onTrack }: OrderCardProps) {
             const itemQty = parseInt(item.quantity, 10) || 1;
             const lineTotal = itemPrice * itemQty;
             const initial = item.productName ? item.productName.trim().charAt(0).toUpperCase() : 'P';
+            const displayColor = cleanValue(item.color);
+            const displaySize = cleanValue(item.size);
 
             return (
               <div key={item.bookingItemId} className="order-item-row">
@@ -116,14 +118,14 @@ export default function OrderCard({ order, onTrack }: OrderCardProps) {
                   </Link>
 
                   <div className="order-item-specs">
-                    {item.color && (
+                    {displayColor && (
                       <span className="order-spec-tag">
-                        Color: <strong>{item.color}</strong>
+                        Color: <strong>{displayColor}</strong>
                       </span>
                     )}
-                    {item.size && (
+                    {displaySize && (
                       <span className="order-spec-tag">
-                        Size: <strong>{item.size}</strong>
+                        Size: <strong>{displaySize}</strong>
                       </span>
                     )}
                     <span className="order-spec-tag">

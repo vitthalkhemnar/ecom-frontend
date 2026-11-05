@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Product, CreateVariantRequest, Variant } from '../../types';
-import { getErrorMessage, ApiError } from '../../api';
+import { getErrorMessage, ApiError, cleanValue } from '../../api';
 
 interface AddVariantModalProps {
   product: Product;
@@ -21,7 +21,9 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
 
   function validate(): Record<string, string> {
     const errs: Record<string, string> = {};
-    if (!size.trim() && !color.trim()) {
+    const cleanS = cleanValue(size);
+    const cleanC = cleanValue(color);
+    if (!cleanS && !cleanC) {
       errs.size = 'Please specify at least a size or color.';
       errs.color = 'Please specify at least a size or color.';
     }
@@ -56,8 +58,8 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
     try {
       await onSave({
         productId: product.id,
-        size: size.trim() || null,
-        color: color.trim() || null,
+        size: cleanValue(size) || null,
+        color: cleanValue(color) || null,
         price: Number(price),
         stock: Number(stock),
         image: image.trim() || null,
@@ -116,7 +118,7 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
               Size
               <input
                 className={`auth-input ${fieldErrors.size ? 'has-error' : ''}`}
-                placeholder="e.g. M, L, XL, 9, 10, NA"
+                placeholder="e.g. M, L, XL, 9, 10"
                 value={size}
                 onChange={(e) => {
                   setSize(e.target.value);
@@ -135,11 +137,12 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
                 </span>
               )}
             </label>
+
             <label className="auth-label">
               Color
               <input
                 className={`auth-input ${fieldErrors.color ? 'has-error' : ''}`}
-                placeholder="e.g. Navy Blue, Black, White"
+                placeholder="e.g. Navy Blue, Crimson"
                 value={color}
                 onChange={(e) => {
                   setColor(e.target.value);
@@ -162,19 +165,18 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
 
           <div className="auth-field-row">
             <label className="auth-label">
-              Price (₹) *
+              Price (₹)
               <input
-                className={`auth-input ${fieldErrors.price ? 'has-error' : ''}`}
                 type="number"
+                step="0.01"
                 min="0"
-                step="any"
+                className={`auth-input ${fieldErrors.price ? 'has-error' : ''}`}
                 value={price}
                 onChange={(e) => {
                   setPrice(e.target.value === '' ? '' : Number(e.target.value));
                   if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: '' }));
                   if (error) setError(null);
                 }}
-                required
               />
               {fieldErrors.price && (
                 <span className="field-error-msg">
@@ -187,19 +189,19 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
                 </span>
               )}
             </label>
+
             <label className="auth-label">
-              Stock Quantity *
+              Initial Stock Quantity
               <input
-                className={`auth-input ${fieldErrors.stock ? 'has-error' : ''}`}
                 type="number"
                 min="0"
+                className={`auth-input ${fieldErrors.stock ? 'has-error' : ''}`}
                 value={stock}
                 onChange={(e) => {
                   setStock(e.target.value === '' ? '' : Number(e.target.value));
                   if (fieldErrors.stock) setFieldErrors((prev) => ({ ...prev, stock: '' }));
                   if (error) setError(null);
                 }}
-                required
               />
               {fieldErrors.stock && (
                 <span className="field-error-msg">
@@ -215,8 +217,9 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
           </div>
 
           <label className="auth-label">
-            Variant Image URL
+            Image URL (optional)
             <input
+              type="url"
               className="auth-input"
               placeholder="https://..."
               value={image}
@@ -224,21 +227,22 @@ export default function AddVariantModal({ product, onSave, onClose }: AddVariant
             />
           </label>
 
-          <label className="admin-role-toggle">
+          <label className="auth-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '4px' }}>
             <input
               type="checkbox"
               checked={active}
               onChange={(e) => setActive(e.target.checked)}
+              style={{ width: 'auto', margin: 0 }}
             />
-            Active (immediately visible to shoppers)
+            <span>Active (available for purchase)</span>
           </label>
 
-          <div className="modal-actions" style={{ marginTop: '16px' }}>
+          <div className="modal-actions">
             <button type="button" className="admin-cancel-btn" onClick={onClose} disabled={saving}>
               Cancel
             </button>
             <button type="submit" className="admin-save-btn" disabled={saving}>
-              {saving ? 'Adding…' : 'Add Variant'}
+              {saving ? 'Creating…' : 'Add variant'}
             </button>
           </div>
         </form>

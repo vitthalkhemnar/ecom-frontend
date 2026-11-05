@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getOrderById, getAllAddress, getUserDetails, formatINR } from '../api';
+import { getOrderById, getAllAddress, getUserDetails, formatINR, cleanValue } from '../api';
 import type { Order, AddressResponse, User } from '../types';
 import OrderTrackingModal from '../components/OrderTrackingModal';
 
@@ -206,6 +206,9 @@ export default function OrderDetailPage() {
             const unitPrice = Number(item.priceAtBooking);
             const qty = Number(item.quantity);
             const lineTotal = unitPrice * qty;
+            const displayColor = cleanValue(item.color);
+            const displaySize = cleanValue(item.size);
+            const variantLabel = [displayColor, displaySize].filter(Boolean).join(' · ') || 'Standard';
 
             return (
               <div className="confirmation-item-row" key={item.bookingItemId}>
@@ -226,7 +229,7 @@ export default function OrderDetailPage() {
                     )}
                     <span className="confirmation-item-name">{item.productName}</span>
                     <span className="confirmation-item-variant">
-                      Variant: {item.color || 'Standard'}{item.size ? ` · ${item.size}` : ''}
+                      Variant: {variantLabel}
                     </span>
                     <span style={{ fontSize: '12.5px', color: 'var(--slate)' }}>
                       Quantity: <strong>{item.quantity}</strong>
@@ -277,7 +280,7 @@ export default function OrderDetailPage() {
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <rect x="1" y="3" width="15" height="13" rx="2" />
-            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+            <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
             <circle cx="5.5" cy="18.5" r="2.5" />
             <circle cx="18.5" cy="18.5" r="2.5" />
           </svg>
