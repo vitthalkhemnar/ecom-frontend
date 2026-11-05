@@ -29,6 +29,7 @@ interface RazorpayPaymentResponse {
 interface RazorpayInstance {
   open(): void;
   close(): void;
+  on(event: string, callback: (response: unknown) => void | Promise<void>): void;
 }
 
 interface Window {

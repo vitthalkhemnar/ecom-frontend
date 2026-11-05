@@ -141,7 +141,7 @@ export default function OrderTrackingModal({ order, onClose, onStatusUpdated }: 
       setLoading(false);
       setRefreshing(false);
     }
-  }, [orderId, order, isAdmin]);
+  }, [orderId, order]);
 
   useEffect(() => {
     if (orderId) {

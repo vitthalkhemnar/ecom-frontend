@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -25,10 +26,10 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
   const { isAuthenticated } = useAuth();
+  const [items, setItems] = useState<CartItem[]>([]);
 
-  async function refreshCart() {
+  const refreshCart = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       const data = await getCart();
@@ -36,9 +37,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // Avoid uncaught rejection
     }
-  }
+  }, [isAuthenticated]);
 
-  async function addItem(payload: AddToCartRequest) {
+  const addItem = useCallback(async (payload: AddToCartRequest) => {
     if (!isAuthenticated) return;
     try {
       const data = await addToCart(payload);
@@ -46,9 +47,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // Avoid uncaught rejection
     }
-  }
+  }, [isAuthenticated]);
 
-  async function removeItem(payload: RemoveFromCartRequest) {
+  const removeItem = useCallback(async (payload: RemoveFromCartRequest) => {
     if (!isAuthenticated) return;
     try {
       const data = await removeFromCart(payload);
@@ -56,7 +57,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // Avoid uncaught rejection
     }
-  }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -64,7 +65,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       setItems([]);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshCart]);
 
   // Count distinct products in the cart so multiple quantities of the same product count as one
   const itemCount = new Set(
@@ -84,8 +85,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useCart(): CartContextValue {
+// eslint-disable-next-line react-refresh/only-export-components
+export function useCart() {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used inside a CartProvider");
+  if (!ctx) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
   return ctx;
 }

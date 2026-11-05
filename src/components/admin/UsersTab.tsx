@@ -47,7 +47,7 @@ export default function UsersTab() {
       if (sortKey === 'username') return a.username.localeCompare(b.username);
       return Number(b.isAdmin) - Number(a.isAdmin);
     }).slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
-  }, [users, search, sortKey]);
+  }, [users, search, sortKey, page]);
 
   const totalPages = useMemo(() => {
     const term = search.trim().toLowerCase();

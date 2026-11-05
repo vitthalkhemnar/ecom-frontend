@@ -64,6 +64,7 @@ export default function CheckoutAddressPage() {
     if (!orderPlacedRef.current && items.length === 0) {
       navigate('/cart', { replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Prevent browser navigation, back button, and tab closing while payment is processing
@@ -180,7 +181,10 @@ export default function CheckoutAddressPage() {
         items: effectiveOrderItems,
       });
 
-      const currentOrderId = order.bookingId || (order as any).orderId;
+      const currentOrderId = (order.bookingId || (order as unknown as { orderId?: string }).orderId) as string | number;
+      if (!currentOrderId) {
+        throw new Error("Failed to receive booking ID for order");
+      }
 
       /*
        * STEP 2
@@ -332,11 +336,12 @@ export default function CheckoutAddressPage() {
        */
       const razorpay = new window.Razorpay(options);
 
-      razorpay.on('payment.failed', async function (response: any) {
+      razorpay.on('payment.failed', async function (response: unknown) {
         setPlacingOrder(false);
         if (!orderPlacedRef.current) {
           try {
-            await rollbackOrder(currentOrderId, response?.error?.description || "Payment failed at gateway");
+            const resObj = response as { error?: { description?: string } } | undefined;
+            await rollbackOrder(currentOrderId, resObj?.error?.description || "Payment failed at gateway");
           } catch (rbErr) {
             console.warn("Order rollback error on payment.failed:", rbErr);
           }

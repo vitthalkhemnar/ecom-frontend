@@ -78,9 +78,9 @@ function authHeader(): HeadersInit {
 export class ApiError extends Error {
   status: number;
   fieldErrors?: Record<string, string>;
-  data?: any;
+  data?: unknown;
 
-  constructor(message: string, status: number, fieldErrors?: Record<string, string>, data?: any) {
+  constructor(message: string, status: number, fieldErrors?: Record<string, string>, data?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -95,13 +95,13 @@ export function getErrorMessage(err: unknown, fallback = 'An unexpected error oc
   if (err instanceof ApiError) return err.message || fallback;
   if (err instanceof Error) return err.message || fallback;
   if (typeof err === 'object') {
-    const anyErr = err as any;
-    if (anyErr.message) return String(anyErr.message);
-    if (anyErr.fieldErrors) {
-      const vals = Object.values(anyErr.fieldErrors);
+    const errObj = err as Record<string, unknown>;
+    if (errObj.message) return String(errObj.message);
+    if (errObj.fieldErrors && typeof errObj.fieldErrors === 'object') {
+      const vals = Object.values(errObj.fieldErrors as Record<string, unknown>);
       if (vals.length > 0) return vals.join('. ');
     }
-    if (anyErr.error) return String(anyErr.error);
+    if (errObj.error) return String(errObj.error);
   }
   return fallback;
 }
@@ -126,7 +126,13 @@ async function request<T>(baseUrl: string, path: string, options?: RequestInit):
     const errText = await res.text();
     let errMsg = `Request failed with status ${res.status}`;
     let fieldErrors: Record<string, string> | undefined = undefined;
-    let errJson: any = null;
+    let errJson: {
+      fieldErrors?: Record<string, string>;
+      errors?: Array<{ field?: string; defaultMessage?: string; message?: string }>;
+      message?: string;
+      error?: string;
+      [key: string]: unknown;
+    } | null = null;
 
     try {
       errJson = JSON.parse(errText);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getAllOrders } from '../../api';
 import type { Order } from '../../types';
@@ -25,7 +25,7 @@ export default function OrdersTab() {
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
   const [page, setPage] = useState(0);
 
-  const loadOrders = () => {
+  const loadOrders = useCallback(() => {
     if (!isAuthenticated) return;
     getAllOrders()
       .then((data) => {
@@ -33,11 +33,11 @@ export default function OrdersTab() {
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     loadOrders();
-  }, [isAuthenticated]);
+  }, [loadOrders]);
 
   useEffect(() => {
     setPage(0);

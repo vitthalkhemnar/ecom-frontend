@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { getProducts, uploadProducts, updateProduct, deleteProduct, createProduct, getErrorMessage } from '../../api';
@@ -29,7 +29,7 @@ export default function ProductsTab() {
 
   const [page, setPage] = useState(0);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       const data = await getProducts();
@@ -38,11 +38,11 @@ export default function ProductsTab() {
     } catch {
       setStatus('error');
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchProducts();
-  }, [isAuthenticated]);
+  }, [fetchProducts]);
 
   useEffect(() => {
     setPage(0);

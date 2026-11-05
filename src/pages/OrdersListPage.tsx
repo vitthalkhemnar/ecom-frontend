@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getOrders } from '../api';
@@ -36,7 +36,7 @@ export default function OrdersListPage() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const fetchUserOrders = () => {
+  const fetchUserOrders = useCallback(() => {
     if (!isAuthenticated) return;
     setStatus('loading');
     getOrders()
@@ -45,11 +45,11 @@ export default function OrdersListPage() {
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchUserOrders();
-  }, [isAuthenticated]);
+  }, [fetchUserOrders]);
 
   // Reset page to 1 when filters or sorting change
   useEffect(() => {

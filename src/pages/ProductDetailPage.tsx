@@ -76,7 +76,6 @@ export default function ProductDetailPage() {
     return Boolean(cleanValue(String(value)));
   });
   const hasMaterial = Boolean(cleanValue(product.material));
-  const categoryNorm = (product.category || '').trim().toLowerCase();
   
   // Display variant-specific image if available, else product image
   const variantImage = selectedVariant?.image ? cleanValue(selectedVariant.image) : null;

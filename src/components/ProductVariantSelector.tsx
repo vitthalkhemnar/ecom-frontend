@@ -48,14 +48,11 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL'];
-const CLOTHING_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
-const FOOTWEAR_SIZES = ['6', '7', '8', '9', '10', '11', '12'];
 
 function getColorHex(colorName: string): string | null {
   if (!colorName) return null;
   const norm = colorName.trim().toLowerCase();
   if (norm === 'na' || norm === 'none' || norm === '-') return null;
-  // Look up in map; if not found, return the name itself if it's a valid CSS color, but NEVER fallback to white
   return COLOR_MAP[norm] || colorName;
 }
 
@@ -94,146 +91,21 @@ export default function ProductVariantSelector({
   const [adding, setAdding] = useState(false);
   const [result, setResult] = useState<'success' | 'error' | null>(null);
 
-  const normCategory = (product.category || '').trim().toLowerCase();
-  const isClothing = normCategory === 'clothing';
-  const isFootwear = normCategory === 'footwear';
-
-  // 1. RAM: ONLY check from product attributes/variables
-  const rawRam = product.attributes?.ram_gb ?? product.attributes?.ram;
-  const hasRamKey = Boolean(
-    rawRam !== undefined &&
-      rawRam !== null &&
-      String(rawRam).trim() !== '' &&
-      String(rawRam).trim().toUpperCase() !== 'NA'
-  );
-
-  const ramValue = hasRamKey
-    ? typeof rawRam === 'number'
-      ? `${rawRam} GB`
-      : String(rawRam).toUpperCase().includes('GB')
-      ? String(rawRam)
-      : `${rawRam} GB`
-    : '';
-
-  const ramOptions = useMemo(() => {
-    if (!hasRamKey || !ramValue) return [];
-    const tiers = ['8 GB', '16 GB', '32 GB'];
-    if (!tiers.some((t) => t.toLowerCase() === ramValue.toLowerCase())) {
-      return [ramValue, ...tiers];
-    }
-    return tiers;
-  }, [hasRamKey, ramValue]);
-
-  // 2. Storage: ONLY check from product attributes/variables
-  const rawStorage = product.attributes?.storage_gb ?? product.attributes?.storage;
-  const hasStorageKey = Boolean(
-    rawStorage !== undefined &&
-      rawStorage !== null &&
-      String(rawStorage).trim() !== '' &&
-      String(rawStorage).trim().toUpperCase() !== 'NA'
-  );
-
-  const storageValue = hasStorageKey
-    ? typeof rawStorage === 'number'
-      ? `${rawStorage} GB`
-      : String(rawStorage)
-    : '';
-
-  const storageOptions = useMemo(() => {
-    if (!hasStorageKey || !storageValue) return [];
-    const isSSD = storageValue.toLowerCase().includes('ssd');
-    const tiers = isSSD
-      ? ['256 GB SSD', '512 GB SSD', '1 TB SSD']
-      : ['128 GB', '256 GB', '512 GB', '1 TB'];
-    if (!tiers.some((t) => t.toLowerCase() === storageValue.toLowerCase())) {
-      return [storageValue, ...tiers];
-    }
-    return tiers;
-  }, [hasStorageKey, storageValue]);
-
-  // 3. Other selectable attribute options from product.attributes (e.g. Capacity)
-  const rawCapacityMah = product.attributes?.capacity_mah;
-  const hasCapacityMahKey = Boolean(
-    rawCapacityMah !== undefined &&
-      rawCapacityMah !== null &&
-      String(rawCapacityMah).trim() !== '' &&
-      String(rawCapacityMah).trim().toUpperCase() !== 'NA'
-  );
-  const capacityMahValue = hasCapacityMahKey ? `${rawCapacityMah} mAh` : '';
-  const capacityMahOptions = useMemo(() => {
-    if (!hasCapacityMahKey || !capacityMahValue) return [];
-    const tiers = ['10000 mAh', '20000 mAh'];
-    if (!tiers.some((t) => t.toLowerCase() === capacityMahValue.toLowerCase())) {
-      return [capacityMahValue, ...tiers];
-    }
-    return tiers;
-  }, [hasCapacityMahKey, capacityMahValue]);
-
-  const rawCapacityMl = product.attributes?.capacity_ml ?? product.attributes?.volume_ml;
-  const hasCapacityMlKey = Boolean(
-    rawCapacityMl !== undefined &&
-      rawCapacityMl !== null &&
-      String(rawCapacityMl).trim() !== '' &&
-      String(rawCapacityMl).trim().toUpperCase() !== 'NA'
-  );
-  const capacityMlValue = hasCapacityMlKey ? `${rawCapacityMl} ml` : '';
-  const capacityMlOptions = useMemo(() => {
-    if (!hasCapacityMlKey || !capacityMlValue) return [];
-    const tiers = ['500 ml', '750 ml', '1000 ml'];
-    if (!tiers.some((t) => t.toLowerCase() === capacityMlValue.toLowerCase())) {
-      return [capacityMlValue, ...tiers];
-    }
-    return tiers;
-  }, [hasCapacityMlKey, capacityMlValue]);
-
-  const [selectedRam, setSelectedRam] = useState<string>('');
-  const [selectedStorage, setSelectedStorage] = useState<string>('');
-  const [selectedCapacity, setSelectedCapacity] = useState<string>('');
-
-  useEffect(() => {
-    if (ramValue) setSelectedRam(ramValue);
-  }, [ramValue]);
-
-  useEffect(() => {
-    if (storageValue) setSelectedStorage(storageValue);
-  }, [storageValue]);
-
-  useEffect(() => {
-    if (capacityMahValue) setSelectedCapacity(capacityMahValue);
-    else if (capacityMlValue) setSelectedCapacity(capacityMlValue);
-  }, [capacityMahValue, capacityMlValue]);
-
-  // 3. Size: Only for Clothing & Footwear if variants have sizes
+  // 1. Dynamic Sizes: extracted directly from backend variants
   const allSizes = useMemo(() => {
-    if (!isClothing && !isFootwear) return [];
-
-    const presentSizes = new Set<string>();
+    const set = new Set<string>();
     for (const v of variants) {
       const s = cleanValue(v.size);
       if (s && s.toUpperCase() !== 'NA') {
-        presentSizes.add(s.toUpperCase());
+        set.add(s);
       }
     }
-
-    if (isFootwear) {
-      const merged = new Set([...FOOTWEAR_SIZES, ...presentSizes]);
-      return Array.from(merged).sort((a, b) => Number(a) - Number(b));
-    }
-
-    if (isClothing) {
-      const merged = new Set<string>();
-      if (presentSizes.has('XS')) merged.add('XS');
-      for (const s of CLOTHING_SIZES) merged.add(s);
-      for (const s of presentSizes) merged.add(s);
-      return sortSizes(Array.from(merged));
-    }
-
-    return [];
-  }, [variants, isClothing, isFootwear]);
+    return sortSizes(Array.from(set));
+  }, [variants]);
 
   const hasSizes = allSizes.length > 0;
 
-  // 4. Color: ONLY show color if explicitly mentioned (non-empty and not 'NA')
+  // 2. Dynamic Colors: extracted directly from backend variants
   const allColors = useMemo(() => {
     const list: string[] = [];
     const seen = new Set<string>();
@@ -249,20 +121,72 @@ export default function ProductVariantSelector({
 
   const hasColors = allColors.length > 0;
 
-  // Check if product has ANY selectable variant options at all
-  const hasAnyOptions =
-    hasSizes ||
-    hasColors ||
-    hasRamKey ||
-    hasStorageKey ||
-    hasCapacityMahKey ||
-    hasCapacityMlKey;
+  // 3. Dynamic RAM: from product.attributes or variants
+  const ramOptions = useMemo(() => {
+    const set = new Set<string>();
+    const raw = product.attributes?.ram_gb ?? product.attributes?.ram;
+    if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim().toUpperCase() !== 'NA') {
+      const formatted = typeof raw === 'number' ? `${raw} GB` : String(raw).toUpperCase().includes('GB') ? String(raw) : `${raw} GB`;
+      set.add(formatted);
+    }
+    return Array.from(set);
+  }, [product.attributes]);
 
-  // Selected size & color states
+  const hasRam = ramOptions.length > 0;
+
+  // 4. Dynamic Storage: from product.attributes or variants
+  const storageOptions = useMemo(() => {
+    const set = new Set<string>();
+    const raw = product.attributes?.storage_gb ?? product.attributes?.storage;
+    if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim().toUpperCase() !== 'NA') {
+      const formatted = typeof raw === 'number' ? `${raw} GB` : String(raw);
+      set.add(formatted);
+    }
+    return Array.from(set);
+  }, [product.attributes]);
+
+  const hasStorage = storageOptions.length > 0;
+
+  // 5. Dynamic Capacity / Volume: from product.attributes
+  const capacityOptions = useMemo(() => {
+    const set = new Set<string>();
+    const mah = product.attributes?.capacity_mah;
+    if (mah && String(mah).toUpperCase() !== 'NA') set.add(`${mah} mAh`);
+
+    const ml = product.attributes?.capacity_ml ?? product.attributes?.volume_ml;
+    if (ml && String(ml).toUpperCase() !== 'NA') set.add(`${ml} ml`);
+
+    const l = product.attributes?.capacity_litres;
+    if (l && String(l).toUpperCase() !== 'NA') set.add(`${l} L`);
+
+    return Array.from(set);
+  }, [product.attributes]);
+
+  const hasCapacity = capacityOptions.length > 0;
+
+  // Check if product has ANY selectable variant/spec options
+  const hasAnyOptions = hasSizes || hasColors || hasRam || hasStorage || hasCapacity;
+
+  // Selected states
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedRam, setSelectedRam] = useState<string>('');
+  const [selectedStorage, setSelectedStorage] = useState<string>('');
+  const [selectedCapacity, setSelectedCapacity] = useState<string>('');
 
-  // Initial selection
+  useEffect(() => {
+    if (ramOptions.length > 0) setSelectedRam(ramOptions[0]);
+  }, [ramOptions]);
+
+  useEffect(() => {
+    if (storageOptions.length > 0) setSelectedStorage(storageOptions[0]);
+  }, [storageOptions]);
+
+  useEffect(() => {
+    if (capacityOptions.length > 0) setSelectedCapacity(capacityOptions[0]);
+  }, [capacityOptions]);
+
+  // Initial selection for sizes and colors
   useEffect(() => {
     if (variants.length === 0) return;
 
@@ -273,7 +197,7 @@ export default function ProductVariantSelector({
       );
 
       if (inStockVar) {
-        setSelectedSize(cleanValue(inStockVar.size).toUpperCase());
+        setSelectedSize(cleanValue(inStockVar.size));
         const c = cleanValue(inStockVar.color);
         if (c && c.toUpperCase() !== 'NA') setSelectedColor(c);
       } else {
@@ -282,7 +206,7 @@ export default function ProductVariantSelector({
             (v) => cleanValue(v.size).toUpperCase() === size.toUpperCase() && v.active && v.stock > 0
           )
         );
-        setSelectedSize(firstAvailable || allSizes[0] || 'S');
+        setSelectedSize(firstAvailable || allSizes[0] || '');
       }
     } else if (hasColors) {
       // Products with color only
@@ -330,7 +254,7 @@ export default function ProductVariantSelector({
     return variants[0] || null;
   }, [variants, hasSizes, hasColors, selectedSize, selectedColor]);
 
-  // Sync variant with parent
+  // Sync variant image and details with parent
   useEffect(() => {
     if (onVariantChange) {
       onVariantChange(currentVariant);
@@ -426,18 +350,17 @@ export default function ProductVariantSelector({
         <h2 className="section-label" style={{ marginBottom: '8px' }}>Select Variant</h2>
       )}
 
-      {/* 1. RAM SELECTION: Only show if product variables have RAM key */}
-      {hasRamKey && ramOptions.length > 0 && (
+      {/* 1. DYNAMIC RAM: from product.attributes */}
+      {hasRam && (
         <div className="variant-option-group">
           <div className="variant-option-header">
             <span className="variant-option-label">RAM:</span>
-            <span className="variant-option-value">{selectedRam || ramValue}</span>
+            <span className="variant-option-value">{selectedRam}</span>
           </div>
 
           <div className="size-options-list" role="radiogroup" aria-label="RAM options">
             {ramOptions.map((ram) => {
               const isSelected = selectedRam.toLowerCase() === ram.toLowerCase();
-              const isAvailable = ramValue.toLowerCase() === ram.toLowerCase();
 
               return (
                 <button
@@ -445,12 +368,9 @@ export default function ProductVariantSelector({
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  disabled={!isAvailable}
-                  className={`size-btn ${isSelected ? 'selected' : ''} ${!isAvailable ? 'disabled' : ''}`}
-                  onClick={() => {
-                    if (isAvailable) setSelectedRam(ram);
-                  }}
-                  title={!isAvailable ? `${ram} (Unavailable)` : `RAM ${ram}`}
+                  className={`size-btn ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSelectedRam(ram)}
+                  title={`RAM ${ram}`}
                 >
                   <span>{ram}</span>
                 </button>
@@ -460,18 +380,17 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {/* 2. STORAGE SELECTION: Only show if product variables have Storage key */}
-      {hasStorageKey && storageOptions.length > 0 && (
+      {/* 2. DYNAMIC STORAGE: from product.attributes */}
+      {hasStorage && (
         <div className="variant-option-group">
           <div className="variant-option-header">
             <span className="variant-option-label">Storage:</span>
-            <span className="variant-option-value">{selectedStorage || storageValue}</span>
+            <span className="variant-option-value">{selectedStorage}</span>
           </div>
 
           <div className="size-options-list" role="radiogroup" aria-label="Storage options">
             {storageOptions.map((st) => {
               const isSelected = selectedStorage.toLowerCase() === st.toLowerCase();
-              const isAvailable = storageValue.toLowerCase() === st.toLowerCase();
 
               return (
                 <button
@@ -479,12 +398,9 @@ export default function ProductVariantSelector({
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  disabled={!isAvailable}
-                  className={`size-btn ${isSelected ? 'selected' : ''} ${!isAvailable ? 'disabled' : ''}`}
-                  onClick={() => {
-                    if (isAvailable) setSelectedStorage(st);
-                  }}
-                  title={!isAvailable ? `${st} (Unavailable)` : `Storage ${st}`}
+                  className={`size-btn ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSelectedStorage(st)}
+                  title={`Storage ${st}`}
                 >
                   <span>{st}</span>
                 </button>
@@ -494,18 +410,17 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {/* 3. CAPACITY / VOLUME SELECTION: Only if product variables have capacity key */}
-      {hasCapacityMahKey && capacityMahOptions.length > 0 && (
+      {/* 3. DYNAMIC CAPACITY / VOLUME: from product.attributes */}
+      {hasCapacity && (
         <div className="variant-option-group">
           <div className="variant-option-header">
             <span className="variant-option-label">Capacity:</span>
-            <span className="variant-option-value">{selectedCapacity || capacityMahValue}</span>
+            <span className="variant-option-value">{selectedCapacity}</span>
           </div>
 
           <div className="size-options-list" role="radiogroup" aria-label="Capacity options">
-            {capacityMahOptions.map((cap) => {
+            {capacityOptions.map((cap) => {
               const isSelected = selectedCapacity.toLowerCase() === cap.toLowerCase();
-              const isAvailable = capacityMahValue.toLowerCase() === cap.toLowerCase();
 
               return (
                 <button
@@ -513,12 +428,9 @@ export default function ProductVariantSelector({
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  disabled={!isAvailable}
-                  className={`size-btn ${isSelected ? 'selected' : ''} ${!isAvailable ? 'disabled' : ''}`}
-                  onClick={() => {
-                    if (isAvailable) setSelectedCapacity(cap);
-                  }}
-                  title={!isAvailable ? `${cap} (Unavailable)` : `Capacity ${cap}`}
+                  className={`size-btn ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSelectedCapacity(cap)}
+                  title={`Capacity ${cap}`}
                 >
                   <span>{cap}</span>
                 </button>
@@ -528,40 +440,7 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {hasCapacityMlKey && capacityMlOptions.length > 0 && (
-        <div className="variant-option-group">
-          <div className="variant-option-header">
-            <span className="variant-option-label">Volume:</span>
-            <span className="variant-option-value">{selectedCapacity || capacityMlValue}</span>
-          </div>
-
-          <div className="size-options-list" role="radiogroup" aria-label="Volume options">
-            {capacityMlOptions.map((vol) => {
-              const isSelected = selectedCapacity.toLowerCase() === vol.toLowerCase();
-              const isAvailable = capacityMlValue.toLowerCase() === vol.toLowerCase();
-
-              return (
-                <button
-                  key={vol}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  disabled={!isAvailable}
-                  className={`size-btn ${isSelected ? 'selected' : ''} ${!isAvailable ? 'disabled' : ''}`}
-                  onClick={() => {
-                    if (isAvailable) setSelectedCapacity(vol);
-                  }}
-                  title={!isAvailable ? `${vol} (Unavailable)` : `Volume ${vol}`}
-                >
-                  <span>{vol}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 3. SIZE OPTIONS: Only for Clothing & Footwear */}
+      {/* 4. DYNAMIC SIZES: from backend variants */}
       {hasSizes && (
         <div className="variant-option-group">
           <div className="variant-option-header">
@@ -602,7 +481,7 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {/* 4. COLOR OPTIONS: Only if variants have mentioned color */}
+      {/* 5. DYNAMIC COLORS: from backend variants */}
       {hasColors && (
         <div className="variant-option-group">
           <div className="variant-option-header">
@@ -621,7 +500,7 @@ export default function ProductVariantSelector({
                   hex.toLowerCase() === 'white' ||
                   hex.toLowerCase() === 'beige');
 
-              let isCombinationPresent = false;
+              let isCombinationPresent: boolean;
               let isOutOfStock = false;
 
               if (hasSizes && selectedSize) {
@@ -689,7 +568,7 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {/* 5. ACTION & PURCHASE CARD */}
+      {/* 6. ACTION & PURCHASE CARD */}
       <div className="selected-variant-summary">
         <div className="variant-summary-info">
           <div className="variant-summary-primary">

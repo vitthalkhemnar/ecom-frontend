@@ -26,7 +26,7 @@ export default function CartPage() {
     if (isAuthenticated) {
       refreshCart();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshCart]);
 
   useEffect(() => {
     getProducts().then(setProducts).catch(() => {});
