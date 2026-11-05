@@ -28,7 +28,7 @@ type Status = "loading" | "ready" | "error";
 
 export default function CheckoutAddressPage() {
   const { isAuthenticated } = useAuth();
-  const { items, totalPrice, removeItem } = useCart();
+  const { items, totalPrice, removeItem, isLoaded: isCartLoaded } = useCart();
 
   const [addresses, setAddresses] = useState<AddressResponse[]>([]);
   const [status, setStatus] = useState<Status>("loading");
@@ -71,13 +71,18 @@ export default function CheckoutAddressPage() {
     return totalPrice;
   }, [orderItems, totalPrice]);
 
-  // Initial redirect: only if neither cart nor direct order items exist
+  // Initial redirect: only if cart has loaded and neither cart items nor direct order items exist
   useEffect(() => {
-    if (!orderPlacedRef.current && items.length === 0 && orderItems.length === 0) {
+    if (orderItems.length > 0) {
+      return; // Direct order items present (e.g. from "Buy Now"), never redirect to /cart
+    }
+    if (!isCartLoaded) {
+      return; // Wait until cart finishes loading from server
+    }
+    if (!orderPlacedRef.current && items.length === 0) {
       navigate('/cart', { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length, orderItems.length]);
+  }, [isCartLoaded, items.length, orderItems.length, navigate]);
 
   // Prevent browser navigation, back button, and tab closing while payment is processing
   useEffect(() => {

@@ -342,12 +342,18 @@ export default function ProductVariantSelector({
       const targetVariantId = currentVariant?.variantId || (variants[0] ? variants[0].variantId : product.id);
       const targetPrice = currentVariant?.price ?? product.price;
 
-      await addItem({
-        productId: String(product.id),
-        variantId: String(targetVariantId),
-        price: targetPrice,
-        quantity,
-      });
+      if (isAuthenticated) {
+        try {
+          await addItem({
+            productId: String(product.id),
+            variantId: String(targetVariantId),
+            price: targetPrice,
+            quantity,
+          });
+        } catch {
+          // Background cart sync is non-blocking for direct Buy Now
+        }
+      }
 
       const orderItem: CreateOrderItem = {
         productId: String(product.id),
@@ -368,12 +374,6 @@ export default function ProductVariantSelector({
   }
 
   function handleBuyNow() {
-    if (!isAuthenticated) {
-      requireAuth(() => {
-        doBuyNow();
-      });
-      return;
-    }
     doBuyNow();
   }
 

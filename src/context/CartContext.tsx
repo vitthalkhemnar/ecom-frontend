@@ -18,6 +18,7 @@ interface CartContextValue {
   items: CartItem[];
   itemCount: number;
   totalPrice: number;
+  isLoaded: boolean;
   addItem: (payload: AddToCartRequest) => Promise<void>;
   removeItem: (payload: RemoveFromCartRequest) => Promise<void>;
   refreshCart: () => Promise<void>;
@@ -28,14 +29,20 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const refreshCart = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setIsLoaded(true);
+      return;
+    }
     try {
       const data = await getCart();
       setItems(Array.isArray(data) ? data : []);
     } catch {
       // Avoid uncaught rejection
+    } finally {
+      setIsLoaded(true);
     }
   }, [isAuthenticated]);
 
@@ -64,6 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       refreshCart();
     } else {
       setItems([]);
+      setIsLoaded(true);
     }
   }, [isAuthenticated, refreshCart]);
 
@@ -78,7 +86,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, itemCount, totalPrice, addItem, removeItem, refreshCart }}
+      value={{ items, itemCount, totalPrice, isLoaded, addItem, removeItem, refreshCart }}
     >
       {children}
     </CartContext.Provider>

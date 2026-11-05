@@ -1,5 +1,5 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { register, sendOtp, getErrorMessage, ApiError } from '../api';
@@ -7,8 +7,46 @@ import { register, sendOtp, getErrorMessage, ApiError } from '../api';
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export default function SignupPage() {
-  const { setAuth } = useAuth();
+  const { isAuthenticated, setAuth } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+
+  // Helper to determine redirect target and preserve state (e.g. orderItems from "Buy Now")
+  const getRedirectTarget = useCallback(() => {
+    const fromLocation = (
+      location.state as {
+        from?: {
+          pathname?: string;
+          search?: string;
+          hash?: string;
+          state?: unknown;
+        };
+      }
+    )?.from;
+
+    if (fromLocation?.pathname) {
+      return {
+        path: `${fromLocation.pathname}${fromLocation.search || ''}${fromLocation.hash || ''}`,
+        state: fromLocation.state,
+      };
+    }
+
+    const params = new URLSearchParams(location.search);
+    const redirectParam = params.get('redirect');
+    if (redirectParam && redirectParam.startsWith('/')) {
+      return { path: redirectParam, state: undefined };
+    }
+
+    return { path: '/', state: undefined };
+  }, [location.state, location.search]);
+
+  // If already authenticated, redirect to previous page or home
+  useEffect(() => {
+    if (isAuthenticated) {
+      const target = getRedirectTarget();
+      navigate(target.path, { state: target.state, replace: true });
+    }
+  }, [isAuthenticated, getRedirectTarget, navigate]);
 
   const [step, setStep] = useState<'details' | 'otp'>('details');
   const [phone, setPhone] = useState('');
@@ -123,7 +161,8 @@ export default function SignupPage() {
 
       toast.success(`Account created! Welcome, ${authData.username || 'User'}!`);
       setAuth(authData);
-      navigate('/', { replace: true });
+      const target = getRedirectTarget();
+      navigate(target.path, { state: target.state, replace: true });
     } catch (err: unknown) {
       const msg = getErrorMessage(err, 'Invalid or expired OTP. Please check the code and try again.');
       setError(msg);

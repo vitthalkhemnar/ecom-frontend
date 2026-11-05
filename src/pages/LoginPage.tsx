@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { sendOtp, login, getErrorMessage } from '../api';
@@ -19,13 +19,42 @@ export default function LoginPage() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
 
+  // Helper to determine redirect target and preserve state (e.g. orderItems from "Buy Now")
+  const getRedirectTarget = useCallback(() => {
+    const fromLocation = (
+      location.state as {
+        from?: {
+          pathname?: string;
+          search?: string;
+          hash?: string;
+          state?: unknown;
+        };
+      }
+    )?.from;
+
+    if (fromLocation?.pathname) {
+      return {
+        path: `${fromLocation.pathname}${fromLocation.search || ''}${fromLocation.hash || ''}`,
+        state: fromLocation.state,
+      };
+    }
+
+    const params = new URLSearchParams(location.search);
+    const redirectParam = params.get('redirect');
+    if (redirectParam && redirectParam.startsWith('/')) {
+      return { path: redirectParam, state: undefined };
+    }
+
+    return { path: '/', state: undefined };
+  }, [location.state, location.search]);
+
   // If already authenticated, redirect to previous page or home
   useEffect(() => {
     if (isAuthenticated) {
-      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      const target = getRedirectTarget();
+      navigate(target.path, { state: target.state, replace: true });
     }
-  }, [isAuthenticated, location.state, navigate]);
+  }, [isAuthenticated, getRedirectTarget, navigate]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -101,8 +130,8 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${authData.username || 'User'}!`);
       setAuth(authData);
 
-      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      const target = getRedirectTarget();
+      navigate(target.path, { state: target.state, replace: true });
     } catch (err: unknown) {
       const msg = getErrorMessage(err, 'Invalid or expired code. Please try again.');
       setError(msg);
@@ -139,6 +168,7 @@ export default function LoginPage() {
               <div style={{ marginTop: '10px' }}>
                 <Link
                   to="/signup"
+                  state={location.state}
                   className="auth-submit"
                   style={{
                     display: 'block',
@@ -194,6 +224,7 @@ export default function LoginPage() {
               Don't have an account?{' '}
               <Link
                 to="/signup"
+                state={location.state}
                 style={{ fontWeight: 600, color: 'var(--ink)', textDecoration: 'none' }}
               >
                 Sign up
