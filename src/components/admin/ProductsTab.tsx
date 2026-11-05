@@ -156,23 +156,23 @@ export default function ProductsTab() {
         </div>
       )}
 
-      <div className="auth-card" style={{ maxWidth: '100%', margin: '0 0 24px 0', padding: '20px' }}>
-        <h3 className="section-label" style={{ paddingTop: 0, borderTop: 'none', fontSize: '17px', marginBottom: '8px' }}>
+      <div className="auth-card admin-bulk-card" style={{ maxWidth: '100%', margin: '0 0 20px 0', padding: '18px 20px' }}>
+        <h3 className="section-label" style={{ paddingTop: 0, borderTop: 'none', fontSize: '16px', marginBottom: '8px' }}>
           Bulk Product Upload (CSV)
         </h3>
         <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="bulk-upload-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               ref={fileInputRef}
               type="file"
               accept=".csv"
               onChange={(e) => e.target.files && setFile(e.target.files[0])}
               className="auth-input"
-              style={{ flex: 1, padding: '8px', background: 'var(--sand)' }}
+              style={{ flex: 1, minWidth: '200px', padding: '8px', background: 'var(--sand)' }}
             />
             <button
               type="submit"
-              className="auth-submit"
+              className="auth-submit bulk-upload-submit"
               disabled={!file || uploading}
               style={{ width: 'auto', padding: '10px 20px', margin: 0 }}
             >
@@ -187,7 +187,7 @@ export default function ProductsTab() {
         </form>
       </div>
 
-      <div className="admin-controls" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="admin-controls">
         <input
           className="auth-input admin-search"
           placeholder="Search by product name, brand, category, code…"
@@ -201,7 +201,7 @@ export default function ProductsTab() {
         </select>
         <button
           type="button"
-          className="auth-submit"
+          className="auth-submit admin-add-btn"
           style={{ width: 'auto', margin: 0, padding: '10px 18px', whiteSpace: 'nowrap' }}
           onClick={() => setCreatingProduct(true)}
         >
@@ -212,55 +212,57 @@ export default function ProductsTab() {
       {visibleProducts.length === 0 ? (
         <p className="state-msg">No products match "{search}".</p>
       ) : (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Brand</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleProducts.map((product) => (
-              <tr key={product.id}>
-                <td>
-                  <div className="admin-thumb">
-                    {product.images && product.images.length > 0 ? (
-                      <img src={product.images[0]} alt={product.productName} />
-                    ) : (
-                      <span>{product.category?.[0] || 'P'}</span>
-                    )}
-                  </div>
-                </td>
-                <td>
-                  <div>{product.productName}</div>
-                  <div className="admin-cell-muted" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
-                    {product.productCode}
-                  </div>
-                </td>
-                <td className="admin-cell-muted">{product.brand}</td>
-                <td className="admin-cell-muted">{product.category}</td>
-                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>₹{product.price}</td>
-                <td>
-                  <div className="admin-row-actions">
-                    <button type="button" className="admin-edit-btn" onClick={() => setVariantsProduct(product)}>
-                      Variants
-                    </button>
-                    <button type="button" className="admin-edit-btn" onClick={() => setEditingProduct(product)}>
-                      Edit
-                    </button>
-                    <button type="button" className="admin-delete-btn" onClick={() => handleDelete(product)}>
-                      Delete
-                    </button>
-                  </div>
-                </td>
+        <div className="admin-table-container">
+          <table className="admin-table admin-table-responsive">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visibleProducts.map((product) => (
+                <tr key={product.id}>
+                  <td data-label="Image" className="admin-thumb-td">
+                    <div className="admin-thumb">
+                      {product.images && product.images.length > 0 ? (
+                        <img src={product.images[0]} alt={product.productName} />
+                      ) : (
+                        <span>{product.category?.[0] || 'P'}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td data-label="Product">
+                    <div className="admin-product-name">{product.productName}</div>
+                    <div className="admin-cell-muted" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                      {product.productCode}
+                    </div>
+                  </td>
+                  <td data-label="Brand" className="admin-cell-muted">{product.brand}</td>
+                  <td data-label="Category" className="admin-cell-muted">{product.category}</td>
+                  <td data-label="Price" style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>₹{product.price}</td>
+                  <td data-label="Actions" className="admin-cell-actions">
+                    <div className="admin-row-actions">
+                      <button type="button" className="admin-edit-btn" onClick={() => setVariantsProduct(product)}>
+                        Variants
+                      </button>
+                      <button type="button" className="admin-edit-btn" onClick={() => setEditingProduct(product)}>
+                        Edit
+                      </button>
+                      <button type="button" className="admin-delete-btn" onClick={() => handleDelete(product)}>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 

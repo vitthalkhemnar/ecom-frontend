@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getOrderById, getAllAddress, getUserDetails, formatINR, cleanValue } from '../api';
 import type { Order, AddressResponse, User } from '../types';
-import OrderTrackingModal from '../components/OrderTrackingModal';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -24,7 +23,6 @@ export default function OrderDetailPage() {
   const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<Status>('loading');
-  const [showTracking, setShowTracking] = useState<boolean>(false);
   const [fallbackAddress, setFallbackAddress] = useState<AddressResponse | null>(null);
   const [fallbackUser, setFallbackUser] = useState<User | null>(null);
 
@@ -75,13 +73,20 @@ export default function OrderDetailPage() {
     return (
       <div className="order-confirmation-container">
         <div className="confirmation-hero-card failed">
+          <div className="confirmation-hero-icon failed" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
           <h1 className="confirmation-hero-title">Order Not Found</h1>
           <p className="confirmation-hero-sub">
-            We couldn't retrieve the details for this order. Please verify the order ID.
+            We couldn't retrieve the details for this order. It may have expired or the order ID is invalid.
           </p>
-          <div className="confirmation-actions-row">
-            <Link to="/" className="confirmation-btn-primary">
-              Continue Shopping
+          <div style={{ marginTop: '20px' }}>
+            <Link to="/" className="failure-action-shop-btn">
+              Browse Products
             </Link>
           </div>
         </div>
@@ -89,8 +94,9 @@ export default function OrderDetailPage() {
     );
   }
 
-  const isDelivered = order.status === 'DELIVERED';
-  const isFailed = order.status === 'FAILED' || order.status === 'CANCELLED';
+  const normStatus = (order.status || '').toUpperCase();
+  const isFailed = normStatus === 'FAILED' || normStatus === 'CANCELLED' || normStatus.includes('FAIL') || normStatus === 'PAYMENT_FAILED';
+  const isDelivered = normStatus === 'DELIVERED';
   const statusType = isFailed ? 'failed' : isDelivered ? 'delivered' : 'confirmed';
 
   const formattedDate = new Date(order.createdAt).toLocaleString('en-IN', {
@@ -107,70 +113,133 @@ export default function OrderDetailPage() {
 
   return (
     <div className="order-confirmation-container">
-      {/* Confirmation Hero Card */}
-      <div className={`confirmation-hero-card ${statusType}`}>
-        <h1 className="confirmation-hero-title">
-          {isFailed
-            ? 'Order Failed'
-            : isDelivered
-            ? 'Order Delivered'
-            : 'Order Confirmed'}
-        </h1>
-
-        <p className="confirmation-hero-sub">
-          {isFailed
-            ? 'This order could not be completed. If your payment was deducted, a refund will be issued.'
-            : isDelivered
-            ? 'Your order has been delivered successfully.'
-            : 'Thank you for your order! Your payment was received and your package is being prepared.'}
-        </p>
-
-        <div className="confirmation-meta-bar">
-          <div className="confirmation-meta-item">
-            <span className="confirmation-meta-label">Order Number</span>
-            <span className="confirmation-meta-val">#{order.bookingId}</span>
+      {/* Top Grid: Hero Card + Delivery Address (Beside each other on desktop, Delivery above items on mobile) */}
+      <div className="confirmation-top-grid">
+        {/* Confirmation Hero Card */}
+        <div className={`confirmation-hero-card ${statusType}`}>
+          <div className="confirmation-title-row">
+            {isFailed ? (
+              <span className="confirmation-badge-icon failed">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              </span>
+            ) : isDelivered ? (
+              <span className="confirmation-badge-icon delivered">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="1" y="3" width="15" height="13" rx="2" />
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
+                  <circle cx="5.5" cy="18.5" r="2.5" />
+                  <circle cx="18.5" cy="18.5" r="2.5" />
+                </svg>
+              </span>
+            ) : (
+              <span className="confirmation-badge-icon confirmed">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+            )}
+            <h1 className="confirmation-hero-title">
+              {isFailed
+                ? 'Order Failed'
+                : isDelivered
+                ? 'Order Delivered'
+                : 'Order Confirmed'}
+            </h1>
           </div>
 
-          <div className="confirmation-meta-item">
-            <span className="confirmation-meta-label">Date Placed</span>
-            <span className="confirmation-meta-val">{formattedDate}</span>
-          </div>
+          <p className="confirmation-hero-sub">
+            {isFailed
+              ? 'We were unable to complete your order. If money was debited from your account, an automatic full refund will be processed within 5–7 business days.'
+              : isDelivered
+              ? 'Your order has been delivered successfully. Thank you for shopping with us!'
+              : 'Thank you for your order! Your payment was received and your package is being prepared for dispatch.'}
+          </p>
 
-          <div className="confirmation-meta-item">
-            <span className="confirmation-meta-label">Payment Status</span>
-            <span className="confirmation-meta-val">
-              {isFailed ? 'Failed' : 'Paid Online'}
-            </span>
-          </div>
+          {isFailed && (
+            <div className="confirmation-failure-notice">
+              <div className="failure-notice-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>Payment & Refund Information</span>
+              </div>
+              <ul className="failure-notice-list">
+                <li><strong>Order not fulfilled:</strong> Items from this order will not be shipped.</li>
+                <li><strong>Automatic refund:</strong> Any amount debited will be refunded back to your bank account within 5–7 business days.</li>
+                <li><strong>Try again:</strong> You can review items in your cart and re-attempt checkout with a different payment method.</li>
+              </ul>
+              <div className="failure-notice-actions">
+                <Link to="/cart" className="failure-action-cart-btn">
+                  Return to Cart
+                </Link>
+                <Link to="/" className="failure-action-shop-btn">
+                  Browse Products
+                </Link>
+              </div>
+            </div>
+          )}
 
-          <div className="confirmation-meta-item">
-            <span className="confirmation-meta-label">Order Status</span>
-            <div>
-              <span className={`confirmation-status-pill ${statusType}`}>
-                {order.status}
+          <div className="confirmation-meta-list">
+            <div className="confirmation-meta-row">
+              <span className="confirmation-meta-label">Order Number:</span>
+              <span className="confirmation-meta-value order-id">#{order.bookingId}</span>
+            </div>
+
+            <div className="confirmation-meta-row">
+              <span className="confirmation-meta-label">Date Placed:</span>
+              <span className="confirmation-meta-value">{formattedDate}</span>
+            </div>
+
+            <div className="confirmation-meta-row">
+              <span className="confirmation-meta-label">Payment Status:</span>
+              <span className={`confirmation-meta-value ${isFailed ? 'failed' : 'paid'}`}>
+                {isFailed ? 'Payment Failed' : 'Paid Online'}
+              </span>
+            </div>
+
+            <div className="confirmation-meta-row">
+              <span className="confirmation-meta-label">Order Status:</span>
+              <span className="confirmation-meta-value">
+                <span className={`confirmation-status-pill ${statusType}`}>
+                  {order.status}
+                </span>
               </span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Grid: Shipping Address & Customer Information */}
-      <div className="confirmation-grid-two">
-        {/* Shipping Address */}
-        <div className="confirmation-info-card">
-          <h2 className="confirmation-card-title">Shipping Address</h2>
+        {/* Delivery Address Card (Beside the Hero card on desktop, above items on mobile) */}
+        <div className="confirmation-info-card confirmation-delivery-card">
+          <h2 className="confirmation-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Delivery Address
+          </h2>
           {resolvedAddress ? (
             <div className="confirmation-info-content">
-              <div style={{ fontWeight: 600, marginBottom: '6px' }}>{fullName}</div>
-              <div>{resolvedAddress.building}</div>
-              <div>{resolvedAddress.area}</div>
-              <div>
+              <div className="confirmation-address-name">{fullName}</div>
+              <div className="confirmation-address-line">{resolvedAddress.building}</div>
+              <div className="confirmation-address-line">{resolvedAddress.area}</div>
+              <div className="confirmation-address-line">
                 {resolvedAddress.city}, {resolvedAddress.state} — {resolvedAddress.pincode}
               </div>
-              <div style={{ color: 'var(--slate)' }}>{resolvedAddress.country}</div>
+              <div className="confirmation-address-line" style={{ color: 'var(--slate)' }}>
+                {resolvedAddress.country}
+              </div>
               {resolvedUser?.phone && (
-                <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--slate)' }}>
-                  Phone: <span style={{ color: 'var(--ink)' }}>{resolvedUser.phone}</span>
+                <div className="confirmation-address-phone">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  <span>Phone: <strong>{resolvedUser.phone}</strong></span>
                 </div>
               )}
             </div>
@@ -180,37 +249,18 @@ export default function OrderDetailPage() {
             </div>
           )}
         </div>
-
-        {/* Customer Information */}
-        <div className="confirmation-info-card">
-          <h2 className="confirmation-card-title">Customer Information</h2>
-          <div className="confirmation-info-content">
-            <div style={{ marginBottom: '10px' }}>
-              <span style={{ color: 'var(--slate)', fontSize: '12.5px', display: 'block', marginBottom: '2px' }}>
-                Full Name
-              </span>
-              <span style={{ fontWeight: 600 }}>{fullName}</span>
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <span style={{ color: 'var(--slate)', fontSize: '12.5px', display: 'block', marginBottom: '2px' }}>
-                Phone Number
-              </span>
-              <span style={{ fontWeight: 500 }}>{resolvedUser?.phone || order.username}</span>
-            </div>
-            <div>
-              <span style={{ color: 'var(--slate)', fontSize: '12.5px', display: 'block', marginBottom: '2px' }}>
-                Email Address
-              </span>
-              <span style={{ fontWeight: 500 }}>{resolvedUser?.email || '—'}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Items Section - PURE INFORMATION, NO PRODUCT LINKS! */}
       <div className="confirmation-items-card">
-        <h2 className="confirmation-card-title" style={{ marginBottom: '6px' }}>
-          Items Ordered ({(order.items || []).length})
+        <h2 className="confirmation-card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          Items in this Order
+          <span className="confirmation-items-count">{(order.items || []).length}</span>
         </h2>
 
         <div style={{ marginTop: '12px' }}>
@@ -271,45 +321,17 @@ export default function OrderDetailPage() {
           </div>
           <div className="confirmation-summary-row total">
             <span>Total Amount</span>
-            <span style={{ color: 'var(--mango-deep, #ea580c)' }}>
+            <span style={{ color: isFailed ? 'var(--rust, #dc2626)' : 'var(--mango-deep, #ea580c)' }}>
               {formatINR(Number(order.totalAmount))}
             </span>
           </div>
+          {isFailed && (
+            <div style={{ fontSize: '12.5px', color: '#b91c1c', marginTop: '6px', textAlign: 'right', fontWeight: 500 }}>
+              • Order failed — No payment captured or refund eligible
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Action Buttons */}
-      <div className="confirmation-actions-row">
-        <button
-          type="button"
-          onClick={() => setShowTracking(true)}
-          className="confirmation-btn-track"
-          id="detail-track-order-btn"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <rect x="1" y="3" width="15" height="13" rx="2" />
-            <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
-            <circle cx="5.5" cy="18.5" r="2.5" />
-            <circle cx="18.5" cy="18.5" r="2.5" />
-          </svg>
-          Track Package
-        </button>
-
-        <Link to="/orders" className="confirmation-btn-secondary">
-          View Order History
-        </Link>
-
-        <Link to="/" className="confirmation-btn-primary">
-          Continue Shopping
-        </Link>
-      </div>
-
-      {showTracking && order && (
-        <OrderTrackingModal
-          order={order}
-          onClose={() => setShowTracking(false)}
-        />
-      )}
     </div>
   );
 }

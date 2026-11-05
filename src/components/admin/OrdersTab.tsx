@@ -88,38 +88,40 @@ export default function OrdersTab() {
       {visibleOrders.length === 0 ? (
         <p className="state-msg">No orders match "{search}".</p>
       ) : (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Items</th>
-              <th>Status</th>
-              <th>Total</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleOrders.map((order) => (
-              <tr key={order.bookingId}>
-                <td style={{ fontFamily: 'var(--font-mono)' }}>#{order.bookingId}</td>
-                <td className="admin-cell-muted">{order.user?.firstName} {order.user?.lastName}</td>
-                <td className="admin-cell-muted">{new Date(order.createdAt).toLocaleDateString()}</td>
-                <td>{order.items.length}</td>
-                <td>
-                  <span className={`variant-stock ${statusClass(order.status)}`}>{order.status}</span>
-                </td>
-                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>₹{order.totalAmount}</td>
-                <td>
-                  <button type="button" className="admin-edit-btn" onClick={() => setViewingOrder(order)}>
-                    View
-                  </button>
-                </td>
+        <div className="admin-table-container">
+          <table className="admin-table admin-table-responsive">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visibleOrders.map((order) => (
+                <tr key={order.bookingId}>
+                  <td data-label="Order ID" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>#{order.bookingId}</td>
+                  <td data-label="Customer" className="admin-cell-muted">{order.user?.firstName} {order.user?.lastName}</td>
+                  <td data-label="Date" className="admin-cell-muted">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td data-label="Items">{order.items.length}</td>
+                  <td data-label="Status">
+                    <span className={`variant-stock ${statusClass(order.status)}`}>{order.status}</span>
+                  </td>
+                  <td data-label="Total" style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>₹{order.totalAmount}</td>
+                  <td data-label="Actions" className="admin-cell-actions">
+                    <button type="button" className="admin-edit-btn" onClick={() => setViewingOrder(order)}>
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 

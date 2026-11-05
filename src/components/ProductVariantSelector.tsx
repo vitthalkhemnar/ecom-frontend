@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { formatINR, cleanValue } from '../api';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { cleanValue } from '../api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import AddToCartResultModal from './AddToCartResultModal';
-import type { Product, Variant } from '../types';
+import type { CreateOrderItem, Product, Variant } from '../types';
 
 interface ProductVariantSelectorProps {
   product: Product;
@@ -84,12 +85,13 @@ export default function ProductVariantSelector({
   variants,
   onVariantChange,
 }: ProductVariantSelectorProps) {
+  const navigate = useNavigate();
   const { addItem } = useCart();
   const { isAuthenticated, requireAuth } = useAuth();
 
-  const [quantity, setQuantity] = useState(1);
+  const quantity = 1;
   const [adding, setAdding] = useState(false);
-  const [result, setResult] = useState<'success' | 'error' | null>(null);
+  const [buying, setBuying] = useState(false);
 
   // 1. Dynamic Sizes: extracted directly from backend variants
   const allSizes = useMemo(() => {
@@ -163,9 +165,6 @@ export default function ProductVariantSelector({
   }, [product.attributes]);
 
   const hasCapacity = capacityOptions.length > 0;
-
-  // Check if product has ANY selectable variant/spec options
-  const hasAnyOptions = hasSizes || hasColors || hasRam || hasStorage || hasCapacity;
 
   // Selected states
   const [selectedSize, setSelectedSize] = useState<string>('');
@@ -318,9 +317,9 @@ export default function ProductVariantSelector({
         price: targetPrice,
         quantity,
       });
-      setResult('success');
+      toast.success(`Added ${quantity > 1 ? `${quantity}x ` : ''}"${product.productName}" to cart!`);
     } catch {
-      setResult('error');
+      toast.error('Could not add item to cart. Please try again.');
     } finally {
       setAdding(false);
     }
@@ -336,6 +335,48 @@ export default function ProductVariantSelector({
     doAddToCart();
   }
 
+  // Buy now handler
+  async function doBuyNow() {
+    setBuying(true);
+    try {
+      const targetVariantId = currentVariant?.variantId || (variants[0] ? variants[0].variantId : product.id);
+      const targetPrice = currentVariant?.price ?? product.price;
+
+      await addItem({
+        productId: String(product.id),
+        variantId: String(targetVariantId),
+        price: targetPrice,
+        quantity,
+      });
+
+      const orderItem: CreateOrderItem = {
+        productId: String(product.id),
+        variantId: String(targetVariantId),
+        productName: product.productName,
+        size: cleanValue(currentVariant?.size),
+        color: cleanValue(currentVariant?.color),
+        quantity: String(quantity),
+        priceAtBooking: String(targetPrice),
+      };
+
+      navigate('/checkout', { state: { orderItems: [orderItem] } });
+    } catch {
+      toast.error('Could not proceed to checkout. Please try again.');
+    } finally {
+      setBuying(false);
+    }
+  }
+
+  function handleBuyNow() {
+    if (!isAuthenticated) {
+      requireAuth(() => {
+        doBuyNow();
+      });
+      return;
+    }
+    doBuyNow();
+  }
+
   // Stock calculation
   const stockInfo = currentVariant
     ? getStockInfo(currentVariant.stock, currentVariant.active)
@@ -345,13 +386,8 @@ export default function ProductVariantSelector({
     !currentVariant || (stockInfo.isAvailable && currentVariant.stock >= quantity)
   );
 
-  const displayPrice = currentVariant?.price ?? product.price;
-
   return (
     <div className="product-variant-selector">
-      {hasAnyOptions && (
-        <h2 className="section-label" style={{ marginBottom: '8px' }}>Select Variant</h2>
-      )}
 
       {/* 1. DYNAMIC RAM: from product.attributes */}
       {hasRam && (
@@ -571,84 +607,34 @@ export default function ProductVariantSelector({
         </div>
       )}
 
-      {/* 6. ACTION & PURCHASE CARD */}
-      <div className="selected-variant-summary">
-        <div className="variant-summary-info">
-          <div className="variant-summary-primary">
-            <span className="variant-summary-price">
-              {formatINR(displayPrice)}
-            </span>
-            <span className={`variant-stock-badge ${stockInfo.cls}`}>
-              {stockInfo.label}
-            </span>
-            {[selectedRam, selectedStorage, selectedCapacity].some(Boolean) && (
-              <span className="variant-spec-pill">
-                {[selectedRam, selectedStorage, selectedCapacity].filter(Boolean).join(' · ')}
-              </span>
-            )}
-          </div>
-          {currentVariant?.sku && (
-            <div className="variant-summary-sku">
-              SKU: <code>{currentVariant.sku}</code>
-            </div>
-          )}
-        </div>
+      {/* 6. PURCHASE ACTIONS: Add to Cart & Buy Now in one line */}
+      <div className="product-purchase-actions">
+        <button
+          type="button"
+          className="variant-add-cart-btn"
+          onClick={handleAddToCart}
+          disabled={!canAddToCart || adding || buying}
+        >
+          {adding
+            ? 'Adding…'
+            : canAddToCart
+            ? 'Add to Cart'
+            : stockInfo.label === 'Out of stock'
+            ? 'Out of Stock'
+            : 'Unavailable'}
+        </button>
 
-        <div className="variant-action-row">
-          {stockInfo.isAvailable && (
-            <div className="variant-qty-selector">
-              <button
-                type="button"
-                className="qty-btn"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                disabled={quantity <= 1 || adding}
-                aria-label="Decrease quantity"
-              >
-                −
-              </button>
-              <span className="qty-number">{quantity}</span>
-              <button
-                type="button"
-                className="qty-btn"
-                onClick={() =>
-                  setQuantity((q) =>
-                    Math.min(currentVariant?.stock ?? 100, q + 1)
-                  )
-                }
-                disabled={Boolean(
-                  currentVariant && quantity >= currentVariant.stock
-                ) || adding}
-                aria-label="Increase quantity"
-              >
-                +
-              </button>
-            </div>
-          )}
-
+        {canAddToCart && (
           <button
             type="button"
-            className="variant-add-cart-btn"
-            onClick={handleAddToCart}
-            disabled={!canAddToCart || adding}
+            className="variant-buy-now-btn"
+            onClick={handleBuyNow}
+            disabled={adding || buying}
           >
-            {adding
-              ? 'Adding to cart…'
-              : canAddToCart
-              ? 'Add to cart'
-              : stockInfo.label === 'Out of stock'
-              ? 'Out of stock'
-              : 'Unavailable'}
+            {buying ? 'Proceeding…' : 'Buy Now'}
           </button>
-        </div>
+        )}
       </div>
-
-      {result && (
-        <AddToCartResultModal
-          status={result}
-          productName={product.productName}
-          onClose={() => setResult(null)}
-        />
-      )}
     </div>
   );
 }

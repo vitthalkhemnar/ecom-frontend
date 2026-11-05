@@ -21,8 +21,8 @@ export default function OrderDetailsModal({ order, onClose, onStatusUpdated }: O
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card modal-card-wide" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="modal-card modal-card-wide modal-card-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
           <h2 className="modal-title" style={{ margin: 0 }}>Order #{order.bookingId}</h2>
           <button
             type="button"
@@ -38,69 +38,73 @@ export default function OrderDetailsModal({ order, onClose, onStatusUpdated }: O
           </button>
         </div>
 
-        <div className="order-section-row">
-          <div className="order-section-card">
-            <span className="order-section-label">Order details</span>
-            <div className="order-detail-grid">
-              <span className="order-detail-key">Status</span>
-              <span className={`variant-stock ${statusClass(order.status)}`}>{order.status}</span>
+        <div className="modal-body">
+          <div className="order-section-row">
+            <div className="order-section-card">
+              <span className="order-section-label">Order details</span>
+              <div className="order-detail-grid">
+                <span className="order-detail-key">Status</span>
+                <span className={`variant-stock ${statusClass(order.status)}`}>{order.status}</span>
 
-              <span className="order-detail-key">Placed on</span>
-              <span>{new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                <span className="order-detail-key">Placed on</span>
+                <span>{new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
 
-              <span className="order-detail-key">Total</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>₹{total.toFixed(2)}</span>
+                <span className="order-detail-key">Total</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>₹{total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="order-section-card">
+              <span className="order-section-label">Customer</span>
+              <div className="order-detail-grid">
+                <span className="order-detail-key">Name</span>
+                <span>{order.user?.firstName} {order.user?.lastName}</span>
+                <span className="order-detail-key">Email</span>
+                <span>{order.user?.email}</span>
+                <span className="order-detail-key">Phone</span>
+                <span>{order.user?.phone}</span>
+              </div>
             </div>
           </div>
 
-          <div className="order-section-card">
-            <span className="order-section-label">Customer</span>
-            <div className="order-detail-grid">
-              <span className="order-detail-key">Name</span>
-              <span>{order.user?.firstName} {order.user?.lastName}</span>
-              <span className="order-detail-key">Email</span>
-              <span>{order.user?.email}</span>
-              <span className="order-detail-key">Phone</span>
-              <span>{order.user?.phone}</span>
+          <div className="order-section-card" style={{ marginTop: '16px' }}>
+            <span className="order-section-label">Items ({order.items.length})</span>
+            <div className="admin-table-container">
+              <table className="admin-table admin-table-responsive">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Variant</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Line total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.items.map((item) => (
+                    <tr key={item.bookingItemId}>
+                      <td data-label="Product" className="admin-cell-primary">{item.productName}</td>
+                      <td data-label="Variant" className="admin-cell-muted">
+                        {[cleanValue(item.color), cleanValue(item.size)].filter(Boolean).join(' · ') || 'Standard'}
+                      </td>
+                      <td data-label="Qty">{item.quantity}</td>
+                      <td data-label="Price" style={{ fontFamily: 'var(--font-mono)' }}>₹{item.priceAtBooking}</td>
+                      <td data-label="Line total" style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                        ₹{(Number(item.priceAtBooking) * Number(item.quantity)).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <div className="order-section-card">
-          <span className="order-section-label">Items ({order.items.length})</span>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Variant</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Line total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {order.items.map((item) => (
-                <tr key={item.bookingItemId}>
-                  <td>{item.productName}</td>
-                  <td className="admin-cell-muted">
-                    {[cleanValue(item.color), cleanValue(item.size)].filter(Boolean).join(' · ') || 'Standard'}
-                  </td>
-                  <td>{item.quantity}</td>
-                  <td>₹{item.priceAtBooking}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-                    ₹{(Number(item.priceAtBooking) * Number(item.quantity)).toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', width: '100%' }}>
+        <div className="modal-actions modal-footer">
           <button
             type="button"
             className="admin-edit-btn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--mango)', color: '#ffffff', border: 'none', padding: '8px 16px', fontWeight: 600 }}
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--mango)', color: '#ffffff', border: 'none', padding: '10px 18px', fontWeight: 600 }}
             onClick={() => setShowTracking(true)}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -111,16 +115,19 @@ export default function OrderDetailsModal({ order, onClose, onStatusUpdated }: O
             </svg>
             Track & Manage
           </button>
+          <button type="button" className="admin-cancel-btn" onClick={onClose}>
+            Close
+          </button>
         </div>
-
-        {showTracking && (
-          <OrderTrackingModal
-            order={order}
-            onClose={() => setShowTracking(false)}
-            onStatusUpdated={onStatusUpdated}
-          />
-        )}
       </div>
+
+      {showTracking && (
+        <OrderTrackingModal
+          order={order}
+          onClose={() => setShowTracking(false)}
+          onStatusUpdated={onStatusUpdated}
+        />
+      )}
     </div>
   );
 }

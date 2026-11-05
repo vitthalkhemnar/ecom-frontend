@@ -6,9 +6,10 @@ interface AddressFormModalProps {
   address?: AddressResponse;
   onSave: (payload: AddAddressRequest | UpdateAddressRequest) => Promise<void>;
   onClose: () => void;
+  inline?: boolean;
 }
 
-export default function AddressFormModal({ address, onSave, onClose }: AddressFormModalProps) {
+export default function AddressFormModal({ address, onSave, onClose, inline = false }: AddressFormModalProps) {
   const [building, setBuilding] = useState(address?.building ?? '');
   const [area, setArea] = useState(address?.area ?? '');
   const [city, setCity] = useState(address?.city ?? '');
@@ -84,27 +85,33 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
     }
   }
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 className="modal-title" style={{ margin: 0 }}>{isEditing ? 'Edit address' : 'Add delivery address'}</h2>
+  const formContent = (
+    <div
+      className={inline ? 'address-form-inline-card' : 'modal-card modal-card-sheet'}
+      onClick={(e) => !inline && e.stopPropagation()}
+    >
+      <div className={inline ? 'address-form-inline-header' : 'modal-header'}>
+        <h2 className={inline ? 'address-form-inline-title' : 'modal-title'} style={{ margin: 0 }}>
+          {isEditing ? 'Edit Delivery Address' : 'Add Delivery Address'}
+        </h2>
+        {onClose && (
           <button
             type="button"
             className="modal-close-btn"
             onClick={onClose}
             aria-label="Close"
-            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', cursor: 'pointer', border: 'none', background: 'transparent', color: 'var(--slate)' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-        </div>
+        )}
+      </div>
 
+      <div className={inline ? 'address-form-inline-body' : 'modal-body'}>
         {error && (
-          <div className="modal-form-error">
+          <div className="modal-form-error" style={{ marginBottom: '16px' }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
@@ -121,6 +128,7 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
               className={`auth-input ${fieldErrors.building ? 'has-error' : ''}`}
               placeholder="e.g. Flat 402, Sunshine Heights"
               value={building}
+              autoComplete="street-address"
               onChange={(e) => {
                 setBuilding(e.target.value);
                 if (fieldErrors.building) setFieldErrors((prev) => ({ ...prev, building: '' }));
@@ -146,6 +154,7 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
               className={`auth-input ${fieldErrors.area ? 'has-error' : ''}`}
               placeholder="e.g. MG Road, Near City Mall"
               value={area}
+              autoComplete="address-line2"
               onChange={(e) => {
                 setArea(e.target.value);
                 if (fieldErrors.area) setFieldErrors((prev) => ({ ...prev, area: '' }));
@@ -172,6 +181,7 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
                 className={`auth-input ${fieldErrors.city ? 'has-error' : ''}`}
                 placeholder="e.g. Bengaluru"
                 value={city}
+                autoComplete="address-level2"
                 onChange={(e) => {
                   setCity(e.target.value);
                   if (fieldErrors.city) setFieldErrors((prev) => ({ ...prev, city: '' }));
@@ -197,6 +207,7 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
                 className={`auth-input ${fieldErrors.state ? 'has-error' : ''}`}
                 placeholder="e.g. Karnataka"
                 value={state}
+                autoComplete="address-level1"
                 onChange={(e) => {
                   setState(e.target.value);
                   if (fieldErrors.state) setFieldErrors((prev) => ({ ...prev, state: '' }));
@@ -224,6 +235,7 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
                 className={`auth-input ${fieldErrors.country ? 'has-error' : ''}`}
                 placeholder="e.g. India"
                 value={country}
+                autoComplete="country-name"
                 onChange={(e) => {
                   setCountry(e.target.value);
                   if (fieldErrors.country) setFieldErrors((prev) => ({ ...prev, country: '' }));
@@ -249,6 +261,9 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
                 className={`auth-input ${fieldErrors.pincode ? 'has-error' : ''}`}
                 placeholder="e.g. 560001"
                 maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="postal-code"
                 value={pincode}
                 onChange={(e) => {
                   setPincode(e.target.value.replace(/\D/g, ''));
@@ -270,16 +285,36 @@ export default function AddressFormModal({ address, onSave, onClose }: AddressFo
             </label>
           </div>
         </div>
-
-        <div className="modal-actions">
-          <button type="button" className="admin-cancel-btn" onClick={onClose} disabled={saving}>
-            Cancel
-          </button>
-          <button type="button" className="admin-save-btn" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : isEditing ? 'Save changes' : 'Add address'}
-          </button>
-        </div>
       </div>
+
+      <div className={inline ? 'address-form-inline-actions' : 'modal-actions modal-footer'}>
+        <button
+          type="button"
+          className={inline ? 'address-form-cancel-btn' : 'admin-cancel-btn'}
+          onClick={onClose}
+          disabled={saving}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className={inline ? 'address-form-save-btn' : 'admin-save-btn'}
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? 'Saving…' : isEditing ? 'Save changes' : 'Add address'}
+        </button>
+      </div>
+    </div>
+  );
+
+  if (inline) {
+    return formContent;
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      {formContent}
     </div>
   );
 }

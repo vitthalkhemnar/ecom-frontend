@@ -85,8 +85,8 @@ export default function EditUserModal({ user, onSave, onClose }: EditUserModalPr
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div className="modal-card modal-card-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
           <h2 className="modal-title" style={{ margin: 0 }}>Edit User</h2>
           <button
             type="button"
@@ -102,128 +102,142 @@ export default function EditUserModal({ user, onSave, onClose }: EditUserModalPr
           </button>
         </div>
 
-        {error && (
-          <div className="modal-form-error">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSave} className="modal-fields" noValidate>
-          <label className="auth-label">
-            Username
-            <input className="auth-input" value={user.username} disabled style={{ background: 'var(--sand, #f8f8f8)', cursor: 'not-allowed' }} />
-          </label>
-
-          <div className="auth-field-row">
-            <label className="auth-label">
-              First name *
-              <input
-                className={`auth-input ${fieldErrors.firstName ? 'has-error' : ''}`}
-                value={firstName}
-                onChange={(e) => {
-                  setFirstName(e.target.value);
-                  if (fieldErrors.firstName) setFieldErrors((prev) => ({ ...prev, firstName: '' }));
-                  if (error) setError(null);
-                }}
-                required
-              />
-              {fieldErrors.firstName && (
-                <span className="field-error-msg">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  {fieldErrors.firstName}
-                </span>
-              )}
-            </label>
-
-            <label className="auth-label">
-              Last name *
-              <input
-                className={`auth-input ${fieldErrors.lastName ? 'has-error' : ''}`}
-                value={lastName}
-                onChange={(e) => {
-                  setLastName(e.target.value);
-                  if (fieldErrors.lastName) setFieldErrors((prev) => ({ ...prev, lastName: '' }));
-                  if (error) setError(null);
-                }}
-                required
-              />
-              {fieldErrors.lastName && (
-                <span className="field-error-msg">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  {fieldErrors.lastName}
-                </span>
-              )}
-            </label>
-          </div>
-
-          <label className="auth-label">
-            Email *
-            <input
-              className={`auth-input ${fieldErrors.email ? 'has-error' : ''}`}
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
-                if (error) setError(null);
-              }}
-              required
-            />
-            {fieldErrors.email && (
-              <span className="field-error-msg">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <form onSubmit={handleSave} className="modal-form-flex" noValidate>
+          <div className="modal-body">
+            {error && (
+              <div className="modal-form-error" style={{ marginBottom: '16px' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
-                {fieldErrors.email}
-              </span>
+                <span>{error}</span>
+              </div>
             )}
-          </label>
 
-          <label className="auth-label">
-            Phone *
-            <input
-              className={`auth-input ${fieldErrors.phone ? 'has-error' : ''}`}
-              value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value);
-                if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: '' }));
-                if (error) setError(null);
-              }}
-              required
-            />
-            {fieldErrors.phone && (
-              <span className="field-error-msg">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                {fieldErrors.phone}
-              </span>
-            )}
-          </label>
+            <div className="modal-fields">
+              <label className="auth-label">
+                Username
+                <input className="auth-input" value={user.username} disabled style={{ background: 'var(--sand, #f8f8f8)', cursor: 'not-allowed' }} />
+              </label>
 
-          <label className="admin-role-toggle">
-            <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} />
-            Admin access
-          </label>
+              <div className="auth-field-row">
+                <label className="auth-label">
+                  First name *
+                  <input
+                    className={`auth-input ${fieldErrors.firstName ? 'has-error' : ''}`}
+                    value={firstName}
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                      if (fieldErrors.firstName) setFieldErrors((prev) => ({ ...prev, firstName: '' }));
+                      if (error) setError(null);
+                    }}
+                    required
+                  />
+                  {fieldErrors.firstName && (
+                    <span className="field-error-msg">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      {fieldErrors.firstName}
+                    </span>
+                  )}
+                </label>
 
-          <div className="modal-actions" style={{ marginTop: '16px' }}>
+                <label className="auth-label">
+                  Last name *
+                  <input
+                    className={`auth-input ${fieldErrors.lastName ? 'has-error' : ''}`}
+                    value={lastName}
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                      if (fieldErrors.lastName) setFieldErrors((prev) => ({ ...prev, lastName: '' }));
+                      if (error) setError(null);
+                    }}
+                    required
+                  />
+                  {fieldErrors.lastName && (
+                    <span className="field-error-msg">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      {fieldErrors.lastName}
+                    </span>
+                  )}
+                </label>
+              </div>
+
+              <label className="auth-label">
+                Email *
+                <input
+                  className={`auth-input ${fieldErrors.email ? 'has-error' : ''}`}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
+                    if (error) setError(null);
+                  }}
+                  required
+                />
+                {fieldErrors.email && (
+                  <span className="field-error-msg">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {fieldErrors.email}
+                  </span>
+                )}
+              </label>
+
+              <label className="auth-label">
+                Phone *
+                <input
+                  className={`auth-input ${fieldErrors.phone ? 'has-error' : ''}`}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: '' }));
+                    if (error) setError(null);
+                  }}
+                  required
+                />
+                {fieldErrors.phone && (
+                  <span className="field-error-msg">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {fieldErrors.phone}
+                  </span>
+                )}
+              </label>
+
+              <label className="admin-role-toggle auth-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={isAdmin}
+                  onChange={(e) => setIsAdmin(e.target.checked)}
+                  style={{ width: '18px', height: '18px', minWidth: '18px', minHeight: '18px', margin: 0, flexShrink: 0 }}
+                />
+                <span>Admin access</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="modal-actions modal-footer">
             <button type="button" className="admin-cancel-btn" onClick={onClose} disabled={saving}>
               Cancel
             </button>

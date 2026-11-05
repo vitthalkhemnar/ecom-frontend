@@ -108,48 +108,50 @@ export default function UsersTab() {
       {visibleUsers.length === 0 ? (
         <p className="state-msg">No users match "{search}".</p>
       ) : (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleUsers.map((user) => (
-              <tr key={user.id}>
-                <td>{user.firstName} {user.lastName}</td>
-                <td className="admin-cell-muted">@{user.username}</td>
-                <td className="admin-cell-muted">{user.email}</td>
-                <td className="admin-cell-muted">{user.phone}</td>
-                <td>
-                  <span className={`variant-stock ${user.isAdmin ? 'in' : 'low'}`}>
-                    {user.isAdmin ? 'Admin' : 'User'}
-                  </span>
-                </td>
-                <td>
-                  <div className="admin-row-actions">
-                    <button type="button" className="admin-edit-btn" onClick={() => setEditingUser(user)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-delete-btn"
-                      onClick={() => handleDelete(user)}
-                      disabled={user.username === currentUsername}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
+        <div className="admin-table-container">
+          <table className="admin-table admin-table-responsive">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visibleUsers.map((user) => (
+                <tr key={user.id}>
+                  <td data-label="Name" className="admin-cell-primary">{user.firstName} {user.lastName}</td>
+                  <td data-label="Username" className="admin-cell-muted">@{user.username}</td>
+                  <td data-label="Email" className="admin-cell-muted">{user.email}</td>
+                  <td data-label="Phone" className="admin-cell-muted">{user.phone}</td>
+                  <td data-label="Role">
+                    <span className={`variant-stock ${user.isAdmin ? 'in' : 'low'}`}>
+                      {user.isAdmin ? 'Admin' : 'User'}
+                    </span>
+                  </td>
+                  <td data-label="Actions" className="admin-cell-actions">
+                    <div className="admin-row-actions">
+                      <button type="button" className="admin-edit-btn" onClick={() => setEditingUser(user)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-delete-btn"
+                        onClick={() => handleDelete(user)}
+                        disabled={user.username === currentUsername}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 

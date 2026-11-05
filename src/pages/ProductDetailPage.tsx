@@ -21,6 +21,8 @@ export default function ProductDetailPage() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState<Status>('loading');
+  // const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -29,6 +31,7 @@ export default function ProductDetailPage() {
     setFailedUrls(new Set());
     setSelectedImageUrl(null);
     setSelectedVariant(null);
+    // setIsDescExpanded(false);
 
     Promise.all([getProductById(id), getVariants(id)])
       .then(([productData, variantData]) => {
@@ -246,23 +249,77 @@ export default function ProductDetailPage() {
             <span className="detail-price-now">{formatINR(displayPrice)}</span>
           </div>
 
-          <p className="detail-desc">{product.description}</p>
+          {/* Product description commented out per user request */}
+          {/*
+          {product.description && (
+            <div className="detail-desc-container">
+              {(() => {
+                const isLong = product.description.length > 180;
+                return (
+                  <p className="detail-desc">
+                    {isDescExpanded || !isLong
+                      ? product.description
+                      : `${product.description.slice(0, 180).trim()}…`}
+                    {isLong && (
+                      <button
+                        type="button"
+                        className="desc-read-more-btn"
+                        onClick={() => setIsDescExpanded((prev) => !prev)}
+                        aria-expanded={isDescExpanded}
+                      >
+                        {isDescExpanded ? 'Read less' : 'Read more'}
+                      </button>
+                    )}
+                  </p>
+                );
+              })()}
+            </div>
+          )}
+          */}
 
           {(hasMaterial || visibleAttrs.length > 0) && (
-            <dl className="attr-table">
-              {hasMaterial && (
-                <>
-                  <dt>Material</dt>
-                  <dd>{cleanValue(product.material)}</dd>
-                </>
+            <div className="product-features-accordion">
+              <button
+                type="button"
+                className="features-accordion-toggle"
+                onClick={() => setIsFeaturesOpen((prev) => !prev)}
+                aria-expanded={isFeaturesOpen}
+              >
+                <span className="features-accordion-title">Features & Specifications</span>
+                <svg
+                  className={`features-chevron ${isFeaturesOpen ? 'open' : ''}`}
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              {isFeaturesOpen && (
+                <div className="features-accordion-content">
+                  <dl className="attr-table">
+                    {hasMaterial && (
+                      <>
+                        <dt>Material</dt>
+                        <dd>{cleanValue(product.material)}</dd>
+                      </>
+                    )}
+                    {visibleAttrs.map(([key, value]) => (
+                      <span key={key} style={{ display: 'contents' }}>
+                        <dt>{key.replaceAll('_', ' ')}</dt>
+                        <dd>{String(value)}</dd>
+                      </span>
+                    ))}
+                  </dl>
+                </div>
               )}
-              {visibleAttrs.map(([key, value]) => (
-                <span key={key} style={{ display: 'contents' }}>
-                  <dt>{key.replaceAll('_', ' ')}</dt>
-                  <dd>{String(value)}</dd>
-                </span>
-              ))}
-            </dl>
+            </div>
           )}
 
           <ProductVariantSelector

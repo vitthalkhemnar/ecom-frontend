@@ -109,8 +109,8 @@ export default function CreateProductModal({ onCreate, onClose }: CreateProductM
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card modal-card-wide" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div className="modal-card modal-card-wide modal-card-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
           <h2 className="modal-title" style={{ margin: 0 }}>Create New Product</h2>
           <button
             type="button"
@@ -126,209 +126,215 @@ export default function CreateProductModal({ onCreate, onClose }: CreateProductM
           </button>
         </div>
 
-        {error && (
-          <div className="modal-form-error">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="modal-fields" noValidate>
-          <label className="auth-label">
-            Product Name *
-            <input
-              className={`auth-input ${fieldErrors.productName ? 'has-error' : ''}`}
-              placeholder="e.g. Allen Solly Men's Slim Fit Polo T-Shirt"
-              value={productName}
-              onChange={(e) => {
-                setProductName(e.target.value);
-                if (fieldErrors.productName) setFieldErrors((prev) => ({ ...prev, productName: '' }));
-                if (error) setError(null);
-              }}
-              required
-            />
-            {fieldErrors.productName && (
-              <span className="field-error-msg">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <form onSubmit={handleSubmit} className="modal-form-flex" noValidate>
+          <div className="modal-body">
+            {error && (
+              <div className="modal-form-error" style={{ marginBottom: '16px' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
-                {fieldErrors.productName}
-              </span>
+                <span>{error}</span>
+              </div>
             )}
-          </label>
 
-          <div className="auth-field-row">
-            <label className="auth-label">
-              Brand *
-              <input
-                className={`auth-input ${fieldErrors.brand ? 'has-error' : ''}`}
-                placeholder="e.g. Allen Solly"
-                value={brand}
-                onChange={(e) => {
-                  setBrand(e.target.value);
-                  if (fieldErrors.brand) setFieldErrors((prev) => ({ ...prev, brand: '' }));
-                  if (error) setError(null);
-                }}
-                required
-              />
-              {fieldErrors.brand && (
-                <span className="field-error-msg">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  {fieldErrors.brand}
-                </span>
-              )}
-            </label>
+            <div className="modal-fields">
+              <label className="auth-label">
+                Product Name *
+                <input
+                  className={`auth-input ${fieldErrors.productName ? 'has-error' : ''}`}
+                  placeholder="e.g. Allen Solly Men's Slim Fit Polo T-Shirt"
+                  value={productName}
+                  onChange={(e) => {
+                    setProductName(e.target.value);
+                    if (fieldErrors.productName) setFieldErrors((prev) => ({ ...prev, productName: '' }));
+                    if (error) setError(null);
+                  }}
+                  required
+                />
+                {fieldErrors.productName && (
+                  <span className="field-error-msg">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {fieldErrors.productName}
+                  </span>
+                )}
+              </label>
 
-            <label className="auth-label">
-              Category *
-              <select
-                className={`auth-input ${fieldErrors.category ? 'has-error' : ''}`}
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  if (fieldErrors.category) setFieldErrors((prev) => ({ ...prev, category: '' }));
-                  if (error) setError(null);
-                }}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              {fieldErrors.category && (
-                <span className="field-error-msg">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  {fieldErrors.category}
-                </span>
-              )}
-            </label>
+              <div className="auth-field-row">
+                <label className="auth-label">
+                  Brand *
+                  <input
+                    className={`auth-input ${fieldErrors.brand ? 'has-error' : ''}`}
+                    placeholder="e.g. Allen Solly"
+                    value={brand}
+                    onChange={(e) => {
+                      setBrand(e.target.value);
+                      if (fieldErrors.brand) setFieldErrors((prev) => ({ ...prev, brand: '' }));
+                      if (error) setError(null);
+                    }}
+                    required
+                  />
+                  {fieldErrors.brand && (
+                    <span className="field-error-msg">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      {fieldErrors.brand}
+                    </span>
+                  )}
+                </label>
+
+                <label className="auth-label">
+                  Category *
+                  <select
+                    className={`auth-input ${fieldErrors.category ? 'has-error' : ''}`}
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value);
+                      if (fieldErrors.category) setFieldErrors((prev) => ({ ...prev, category: '' }));
+                      if (error) setError(null);
+                    }}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  {fieldErrors.category && (
+                    <span className="field-error-msg">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      {fieldErrors.category}
+                    </span>
+                  )}
+                </label>
+              </div>
+
+              <div className="auth-field-row">
+                <label className="auth-label">
+                  Subcategory
+                  <input
+                    className="auth-input"
+                    placeholder="e.g. T-Shirt, Sneaker, Smartphone"
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value)}
+                  />
+                </label>
+
+                <label className="auth-label">
+                  Material
+                  <input
+                    className="auth-input"
+                    placeholder="e.g. Cotton, Leather, Polyester"
+                    value={material}
+                    onChange={(e) => setMaterial(e.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className="auth-field-row">
+                <label className="auth-label">
+                  Price (₹) *
+                  <input
+                    className={`auth-input ${fieldErrors.price ? 'has-error' : ''}`}
+                    type="number"
+                    min="0"
+                    step="any"
+                    inputMode="decimal"
+                    placeholder="e.g. 1299"
+                    value={price}
+                    onChange={(e) => {
+                      setPrice(e.target.value === '' ? '' : Number(e.target.value));
+                      if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: '' }));
+                      if (error) setError(null);
+                    }}
+                    required
+                  />
+                  {fieldErrors.price && (
+                    <span className="field-error-msg">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      {fieldErrors.price}
+                    </span>
+                  )}
+                </label>
+
+                <label className="auth-label">
+                  Discount Amount (₹)
+                  <input
+                    className={`auth-input ${fieldErrors.discount ? 'has-error' : ''}`}
+                    type="number"
+                    min="0"
+                    step="any"
+                    inputMode="decimal"
+                    placeholder="e.g. 400"
+                    value={discount}
+                    onChange={(e) => {
+                      setDiscount(e.target.value === '' ? '' : Number(e.target.value));
+                      if (fieldErrors.discount) setFieldErrors((prev) => ({ ...prev, discount: '' }));
+                      if (error) setError(null);
+                    }}
+                  />
+                  {fieldErrors.discount && (
+                    <span className="field-error-msg">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      {fieldErrors.discount}
+                    </span>
+                  )}
+                </label>
+              </div>
+
+              <label className="auth-label">
+                Product Code (Optional)
+                <input
+                  className="auth-input"
+                  placeholder="Leave empty to auto-generate (e.g. CLO-TSH-ALS-1001)"
+                  value={productCode}
+                  onChange={(e) => setProductCode(e.target.value)}
+                />
+              </label>
+
+              <label className="auth-label">
+                Image URL(s)
+                <input
+                  className="auth-input"
+                  placeholder="https://... (comma-separate multiple URLs)"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+              </label>
+
+              <label className="auth-label">
+                Description
+                <textarea
+                  className="auth-input"
+                  rows={3}
+                  placeholder="Enter product details, specifications, and styling notes..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  style={{ resize: 'vertical', fontFamily: 'inherit' }}
+                />
+              </label>
+            </div>
           </div>
 
-          <div className="auth-field-row">
-            <label className="auth-label">
-              Subcategory
-              <input
-                className="auth-input"
-                placeholder="e.g. T-Shirt, Sneaker, Smartphone"
-                value={subcategory}
-                onChange={(e) => setSubcategory(e.target.value)}
-              />
-            </label>
-
-            <label className="auth-label">
-              Material
-              <input
-                className="auth-input"
-                placeholder="e.g. Cotton, Leather, Polyester"
-                value={material}
-                onChange={(e) => setMaterial(e.target.value)}
-              />
-            </label>
-          </div>
-
-          <div className="auth-field-row">
-            <label className="auth-label">
-              Price (₹) *
-              <input
-                className={`auth-input ${fieldErrors.price ? 'has-error' : ''}`}
-                type="number"
-                min="0"
-                step="any"
-                placeholder="e.g. 1299"
-                value={price}
-                onChange={(e) => {
-                  setPrice(e.target.value === '' ? '' : Number(e.target.value));
-                  if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: '' }));
-                  if (error) setError(null);
-                }}
-                required
-              />
-              {fieldErrors.price && (
-                <span className="field-error-msg">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  {fieldErrors.price}
-                </span>
-              )}
-            </label>
-
-            <label className="auth-label">
-              Discount Amount (₹)
-              <input
-                className={`auth-input ${fieldErrors.discount ? 'has-error' : ''}`}
-                type="number"
-                min="0"
-                step="any"
-                placeholder="e.g. 400"
-                value={discount}
-                onChange={(e) => {
-                  setDiscount(e.target.value === '' ? '' : Number(e.target.value));
-                  if (fieldErrors.discount) setFieldErrors((prev) => ({ ...prev, discount: '' }));
-                  if (error) setError(null);
-                }}
-              />
-              {fieldErrors.discount && (
-                <span className="field-error-msg">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  {fieldErrors.discount}
-                </span>
-              )}
-            </label>
-          </div>
-
-          <label className="auth-label">
-            Product Code (Optional)
-            <input
-              className="auth-input"
-              placeholder="Leave empty to auto-generate (e.g. CLO-TSH-ALS-1001)"
-              value={productCode}
-              onChange={(e) => setProductCode(e.target.value)}
-            />
-          </label>
-
-          <label className="auth-label">
-            Image URL(s)
-            <input
-              className="auth-input"
-              placeholder="https://... (comma-separate multiple URLs)"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
-          </label>
-
-          <label className="auth-label">
-            Description
-            <textarea
-              className="auth-input"
-              rows={3}
-              placeholder="Enter product details, specifications, and styling notes..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              style={{ resize: 'vertical', fontFamily: 'inherit' }}
-            />
-          </label>
-
-          <div className="modal-actions" style={{ marginTop: '16px' }}>
+          <div className="modal-actions modal-footer">
             <button type="button" className="admin-cancel-btn" onClick={onClose} disabled={saving}>
               Cancel
             </button>

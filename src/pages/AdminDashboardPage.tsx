@@ -9,32 +9,36 @@ export default function AdminDashboardPage() {
   const [tab, setTab] = useState<Tab>('users');
 
   return (
-    <div className="page">
-      <h1 className="detail-title">Admin dashboard</h1>
+    <div className="page admin-dashboard-page">
+      <div className="admin-page-header">
+        <h1 className="detail-title" style={{ margin: 0 }}>Admin Dashboard</h1>
+      </div>
+
       <div className="admin-layout">
-        <nav className="admin-tabs">
+        <nav className="admin-tabs" aria-label="Admin Navigation">
           <button
             type="button"
             className={`admin-tab ${tab === 'users' ? 'active' : ''}`}
             onClick={() => setTab('users')}
           >
-            User management
+            Users
           </button>
           <button
             type="button"
             className={`admin-tab ${tab === 'products' ? 'active' : ''}`}
             onClick={() => setTab('products')}
           >
-            Product management
+            Products
           </button>
           <button
             type="button"
             className={`admin-tab ${tab === 'orders' ? 'active' : ''}`}
             onClick={() => setTab('orders')}
           >
-            Order management
+            Orders
           </button>
         </nav>
+
         <div className="admin-content">
           {tab === 'users' && <UsersTab />}
           {tab === 'products' && <ProductsTab />}

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatINR, cleanValue } from '../api';
 import type { Order } from '../types';
@@ -5,6 +6,22 @@ import type { Order } from '../types';
 interface OrderCardProps {
   order: Order;
   onTrack?: (order: Order) => void;
+}
+
+const MILESTONES = [
+  { key: 'CREATED', label: 'Order Placed', desc: 'Order received & catalogued' },
+  { key: 'CONFIRMED', label: 'Confirmed', desc: 'Payment verified & approved' },
+  { key: 'PROCESSING', label: 'Processing', desc: 'Packed & handed to courier' },
+  { key: 'DELIVERED', label: 'Delivered', desc: 'Package delivered to recipient' },
+];
+
+function getStageIndex(status: string): number {
+  const norm = (status || '').toUpperCase();
+  if (norm === 'DELIVERED') return 3;
+  if (norm === 'PROCESSING' || norm === 'SHIPPED') return 2;
+  if (norm === 'CONFIRMED') return 1;
+  if (norm === 'CREATED' || norm === 'PENDING') return 0;
+  return -1; // CANCELLED or FAILED
 }
 
 function statusBadge(status: string) {
@@ -60,13 +77,18 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export default function OrderCard({ order, onTrack }: OrderCardProps) {
+export default function OrderCard({ order }: OrderCardProps) {
+  const [isFulfillmentOpen, setIsFulfillmentOpen] = useState(false);
   const badge = statusBadge(order.status);
   const items = order.items || [];
   const totalItemCount = items.reduce(
     (sum, item) => sum + (parseInt(item.quantity, 10) || 1),
     0
   );
+
+  const currentStatus = order.status || 'CREATED';
+  const currentStageIdx = getStageIndex(currentStatus);
+  const isCancelled = currentStatus.toUpperCase() === 'CANCELLED' || currentStatus.toUpperCase() === 'FAILED';
 
   return (
     <article className="order-history-card">
@@ -168,23 +190,33 @@ export default function OrderCard({ order, onTrack }: OrderCardProps) {
         </div>
 
         <div className="order-footer-links">
-          {onTrack && (
-            <button
-              type="button"
-              className="order-track-btn"
-              onClick={() => onTrack(order)}
-              title="Track shipment progress"
-              id={`track-order-btn-${order.bookingId}`}
+          <button
+            type="button"
+            className={`order-fulfillment-toggle-btn ${isFulfillmentOpen ? 'open' : ''}`}
+            onClick={() => setIsFulfillmentOpen((prev) => !prev)}
+            aria-expanded={isFulfillmentOpen}
+            id={`toggle-fulfillment-btn-${order.bookingId}`}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <rect x="1" y="3" width="15" height="13" rx="2" />
+              <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
+              <circle cx="5.5" cy="18.5" r="2.5" />
+              <circle cx="18.5" cy="18.5" r="2.5" />
+            </svg>
+            <span>{isFulfillmentOpen ? 'Hide Fulfillment' : 'Fulfillment Status'}</span>
+            <svg
+              className={`fulfillment-chevron ${isFulfillmentOpen ? 'open' : ''}`}
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <rect x="1" y="3" width="15" height="13" rx="2" />
-                <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
-                <circle cx="5.5" cy="18.5" r="2.5" />
-                <circle cx="18.5" cy="18.5" r="2.5" />
-              </svg>
-              Track Order
-            </button>
-          )}
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
           <Link to={`/orders/${order.bookingId}`} className="order-view-details-btn">
             View Details
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -193,6 +225,58 @@ export default function OrderCard({ order, onTrack }: OrderCardProps) {
           </Link>
         </div>
       </footer>
+
+      {/* Collapsible Order Fulfillment Status */}
+      {isFulfillmentOpen && (
+        <div className="order-collapsible-fulfillment">
+          <div className="fulfillment-header">
+            <span className="fulfillment-title">Fulfillment Progress</span>
+            <span className={badge.className}>
+              {badge.icon}
+              <span>{order.status}</span>
+            </span>
+          </div>
+
+          {isCancelled ? (
+            <div className="fulfillment-cancelled-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              <span>This order was cancelled or failed. No items will be shipped.</span>
+            </div>
+          ) : (
+            <div className="fulfillment-stepper">
+              {MILESTONES.map((m, idx) => {
+                const isCompleted = currentStageIdx >= idx;
+                const isCurrent = currentStageIdx === idx;
+                return (
+                  <div
+                    key={m.key}
+                    className={`fulfillment-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}
+                  >
+                    <div className="fulfillment-step-line" />
+                    <div className="fulfillment-step-dot">
+                      {isCompleted ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <span>{idx + 1}</span>
+                      )}
+                    </div>
+                    <div className="fulfillment-step-text">
+                      <span className="fulfillment-step-label">{m.label}</span>
+                      <span className="fulfillment-step-desc">{m.desc}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </article>
   );
 }

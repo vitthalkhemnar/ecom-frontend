@@ -75,14 +75,19 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card modal-card-wide" onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-          <h2 className="modal-title" style={{ margin: 0 }}>Variants — {product.productName}</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="modal-card modal-card-wide modal-card-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <h2 className="modal-title" style={{ margin: 0 }}>Variants — {product.productName}</h2>
+            <div style={{ fontSize: '12px', color: 'var(--slate)', marginTop: '2px' }}>
+              Code: {product.productCode}
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
               type="button"
               className="auth-submit"
-              style={{ width: 'auto', margin: 0, padding: '8px 16px', fontSize: '13px' }}
+              style={{ width: 'auto', margin: 0, padding: '8px 14px', fontSize: '13px' }}
               onClick={() => setAddingVariant(true)}
             >
               + Add Variant
@@ -102,57 +107,70 @@ export default function VariantsModal({ product, onClose, onVariantsEmptied }: V
           </div>
         </div>
 
-        {status === 'loading' && <p className="state-msg">Loading variants…</p>}
-        {status === 'error' && <p className="state-msg error">Couldn't load variants.</p>}
+        <div className="modal-body">
+          {status === 'loading' && <p className="state-msg">Loading variants…</p>}
+          {status === 'error' && <p className="state-msg error">Couldn't load variants.</p>}
 
-        {status === 'ready' && variants.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <p className="state-msg" style={{ margin: '0 0 12px 0' }}>No variants for this product yet.</p>
-            <button
-              type="button"
-              className="auth-submit"
-              style={{ width: 'auto', display: 'inline-block', margin: '0 auto', padding: '8px 16px', fontSize: '13px' }}
-              onClick={() => setAddingVariant(true)}
-            >
-              Create First Variant
-            </button>
-          </div>
-        )}
+          {status === 'ready' && variants.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+              <p className="state-msg" style={{ margin: '0 0 16px 0' }}>No variants for this product yet.</p>
+              <button
+                type="button"
+                className="auth-submit"
+                style={{ width: 'auto', display: 'inline-block', margin: '0 auto', padding: '10px 20px', fontSize: '13.5px' }}
+                onClick={() => setAddingVariant(true)}
+              >
+                Create First Variant
+              </button>
+            </div>
+          )}
 
-        {status === 'ready' && variants.length > 0 && (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Size</th>
-                <th>Color</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {variants.map((v) => (
-                <tr key={v.variantId}>
-                  <td>{cleanValue(v.size) || '—'}</td>
-                  <td>{cleanValue(v.color) || '—'}</td>
-                  <td>₹{v.price}</td>
-                  <td>{v.stock}</td>
-                  <td>
-                    <div className="admin-row-actions">
-                      <button type="button" className="admin-edit-btn" onClick={() => setEditingVariant(v)}>
-                        Edit
-                      </button>
-                      <button type="button" className="admin-delete-btn" onClick={() => handleDeleteVariant(v.variantId)}>
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+          {status === 'ready' && variants.length > 0 && (
+            <div className="admin-table-container">
+              <table className="admin-table admin-table-responsive">
+                <thead>
+                  <tr>
+                    <th>Size</th>
+                    <th>Color</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {variants.map((v) => (
+                    <tr key={v.variantId}>
+                      <td data-label="Size">{cleanValue(v.size) || '—'}</td>
+                      <td data-label="Color">{cleanValue(v.color) || '—'}</td>
+                      <td data-label="Price" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>₹{v.price}</td>
+                      <td data-label="Stock">
+                        <span className={`variant-stock ${v.stock > 0 ? 'in' : 'out'}`}>
+                          {v.stock} in stock
+                        </span>
+                      </td>
+                      <td data-label="Actions" className="admin-cell-actions">
+                        <div className="admin-row-actions">
+                          <button type="button" className="admin-edit-btn" onClick={() => setEditingVariant(v)}>
+                            Edit
+                          </button>
+                          <button type="button" className="admin-delete-btn" onClick={() => handleDeleteVariant(v.variantId)}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
+        <div className="modal-actions modal-footer">
+          <button type="button" className="admin-cancel-btn" onClick={onClose} style={{ width: '100%' }}>
+            Done
+          </button>
+        </div>
       </div>
 
       {editingVariant && (
