@@ -115,9 +115,12 @@ async function request<T>(baseUrl: string, path: string, options?: RequestInit):
     },
   });
 
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
     if (!path.startsWith('/auth/')) {
-      onUnauthorized?.();
+      const token = getToken();
+      if (token) {
+        onUnauthorized?.();
+      }
       throw new ApiError('Session expired. Please log in again.', res.status);
     }
   }
@@ -408,9 +411,11 @@ export function uploadProducts(file: File): Promise<string> {
     },
     body: formData,
   }).then(async (res) => {
-    if (res.status === 401 || res.status === 403) {
-      onUnauthorized?.();
-      throw new Error('Session expired');
+    if (res.status === 401) {
+      if (getToken()) {
+        onUnauthorized?.();
+      }
+      throw new Error('Session expired. Please log in again.');
     }
     const text = await res.text();
     if (!res.ok) {

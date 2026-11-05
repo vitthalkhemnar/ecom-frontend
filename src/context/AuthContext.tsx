@@ -52,14 +52,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     registerUnauthorizedHandler(() => {
       if (loggingOutRef.current) return;
+
+      // Only handle if user actually had an active session (avoid kicking out guest browsers)
+      const hadToken = !!(sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY) || localStorage.getItem('token'));
+      if (!hadToken) return;
+
       loggingOutRef.current = true;
       setApiToken(null);
       sessionStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem('token');
-      toast.error("Please log in to continue.");
       setAuthState({ token: null, username: null, roles: [] });
-      window.location.href = '/login';
+      toast.error("Session expired. Please log in again.");
+
+      const currentPath = window.location.pathname;
+      const isAuthPage = currentPath.startsWith('/login') || currentPath.startsWith('/signup') || currentPath.startsWith('/admin/login') || currentPath.startsWith('/admin-login');
+      if (!isAuthPage) {
+        window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      }
     });
   }, []);
 
@@ -77,7 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       callback?.();
       return true;
     }
-    window.location.href = '/login';
+    const currentPath = window.location.pathname;
+    window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
     return false;
   }, [auth.token]);
 
