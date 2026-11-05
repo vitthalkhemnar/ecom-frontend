@@ -5,6 +5,14 @@ import { useAuth } from '../context/AuthContext';
 import { getProducts, getVariants, formatINR, cleanValue } from '../api';
 import type { CreateOrderItem, Product, Variant } from '../types';
 
+function CartItemThumbnail({ src, alt }: { src?: string | null; alt: string }) {
+  const [error, setError] = useState(false);
+  if (!src || error) {
+    return <span className="media-placeholder">Image not available</span>;
+  }
+  return <img src={src} alt={alt} onError={() => setError(true)} />;
+}
+
 export default function CartPage() {
   const { items, totalPrice, refreshCart, addItem, removeItem } = useCart();
   const { isAuthenticated } = useAuth();
@@ -124,13 +132,7 @@ export default function CartPage() {
                 <div className="cart-row" key={key}>
                   <Link to={`/product/${item.productId}`} className="cart-row-link">
                     <div className="cart-row-media">
-                      {image ? (
-                        <img src={image} alt={product?.productName ?? ''} />
-                      ) : (
-                        <span className="media-placeholder">
-                          {product?.subcategory || product?.category || 'Item'}
-                        </span>
-                      )}
+                      <CartItemThumbnail src={image} alt={product?.productName ?? ''} />
                     </div>
 
                     <div className="cart-row-info">

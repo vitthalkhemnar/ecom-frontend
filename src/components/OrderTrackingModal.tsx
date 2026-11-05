@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { getOrderTracking, changeOrderStatus, formatINR, getErrorMessage } from '../api';
+import { getOrderTracking, changeOrderStatus, formatINR, getErrorMessage, cleanValue } from '../api';
 import type { Order, OrderTracking } from '../types';
 
 interface OrderTrackingModalProps {
@@ -16,6 +16,18 @@ const MILESTONES = [
   { key: 'PROCESSING', label: 'Processing', desc: 'Packed & handed to courier' },
   { key: 'DELIVERED', label: 'Delivered', desc: 'Package delivered to recipient' },
 ];
+
+function TrackingMiniThumbnail({ src, alt }: { src?: string | null; alt: string }) {
+  const [error, setError] = useState(false);
+  if (!src || error) {
+    return (
+      <span style={{ fontSize: '8px', color: 'var(--slate)', fontWeight: 600, textAlign: 'center', lineHeight: 1.1, padding: '2px' }} title="Image not available">
+        Image not available
+      </span>
+    );
+  }
+  return <img src={src} alt={alt} onError={() => setError(true)} />;
+}
 
 function getStageIndex(status: string): number {
   const norm = (status || '').toUpperCase();
@@ -344,22 +356,19 @@ export default function OrderTrackingModal({ order, onClose, onStatusUpdated }: 
                   <h4 className="tracking-card-section-title">Package Items ({items.length})</h4>
                   <div className="tracking-mini-items-list">
                     {items.map((item) => {
-                      const initial = item.productName ? item.productName.trim().charAt(0).toUpperCase() : 'P';
+                      const displaySize = cleanValue(item.size);
+                      const displayColor = cleanValue(item.color);
                       return (
                         <div key={item.bookingItemId || item.productId} className="tracking-mini-item">
                           <div className="tracking-mini-thumb">
-                            {item.imageUrl ? (
-                              <img src={item.imageUrl} alt={item.productName} />
-                            ) : (
-                              <span>{initial}</span>
-                            )}
+                            <TrackingMiniThumbnail src={item.imageUrl} alt={item.productName} />
                           </div>
                           <div className="tracking-mini-details">
                             <span className="tracking-mini-name">{item.productName}</span>
                             <span className="tracking-mini-specs">
                               Qty: <strong>{item.quantity}</strong>
-                              {item.size ? ` · Size: ${item.size}` : ''}
-                              {item.color ? ` · Color: ${item.color}` : ''}
+                              {displaySize ? ` · Size: ${displaySize}` : ''}
+                              {displayColor ? ` · Color: ${displayColor}` : ''}
                             </span>
                           </div>
                           <span className="tracking-mini-price">

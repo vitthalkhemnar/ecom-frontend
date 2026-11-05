@@ -7,6 +7,18 @@ import OrderTrackingModal from '../components/OrderTrackingModal';
 
 type Status = 'loading' | 'ready' | 'error';
 
+function OrderItemThumbnail({ src, alt }: { src?: string | null; alt: string }) {
+  const [error, setError] = useState(false);
+  if (!src || error) {
+    return (
+      <span style={{ fontSize: '9.5px', color: 'var(--slate)', fontWeight: 600, textAlign: 'center', lineHeight: 1.15, padding: '4px' }}>
+        Image not available
+      </span>
+    );
+  }
+  return <img src={src} alt={alt} onError={() => setError(true)} />;
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useAuth();
@@ -215,11 +227,7 @@ export default function OrderDetailPage() {
                 <div className="confirmation-item-left">
                   {/* Thumbnail (Non-clickable) */}
                   <div className="confirmation-item-thumb">
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.productName} />
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'var(--slate)', fontWeight: 600 }}>ITEM</span>
-                    )}
+                    <OrderItemThumbnail src={item.imageUrl} alt={item.productName} />
                   </div>
 
                   {/* Details (Pure Text - NO Links!) */}

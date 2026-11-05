@@ -11,11 +11,13 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [status, setStatus] = useState<Status>('loading');
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     setStatus('loading');
+    setImageError(false);
 
     Promise.all([getProductById(id), getVariants(id)])
       .then(([productData, variantData]) => {
@@ -64,9 +66,6 @@ export default function ProductDetailPage() {
     );
   }
 
-  // const original = product.price;
-  // const savings = product.price * (product.discount / 100);
-  // const now = original - savings;
   const attrEntries = Object.entries(product.attributes || {});
   const visibleAttrs = attrEntries.filter(([key, value]) => {
     const normKey = key.toLowerCase();
@@ -76,16 +75,21 @@ export default function ProductDetailPage() {
     return Boolean(cleanValue(String(value)));
   });
   const hasMaterial = Boolean(cleanValue(product.material));
-  const image = product.images && product.images.length > 0 ? product.images[0] : null;
+  const image = !imageError && product.images && product.images.length > 0 ? product.images[0] : null;
 
   return (
     <div className="page">
       <div className="detail-grid">
         <div className="detail-media">
           {image ? (
-            <img src={image} alt={product.productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img
+              src={image}
+              alt={product.productName}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={() => setImageError(true)}
+            />
           ) : (
-            <span className="media-placeholder">{product.subcategory || product.category}</span>
+            <span className="media-placeholder">Image not available</span>
           )}
         </div>
 
@@ -96,11 +100,7 @@ export default function ProductDetailPage() {
 
           <div className="detail-price-row">
             <span className="detail-price-now">{formatINR(product.price)}</span>
-            {/* {savings > 0 && <span className="detail-price-was">{formatINR(original)}</span>} */}
           </div>
-          {/* {savings > 0 && (
-            <div className="detail-savings">You save {formatINR(savings)}</div>
-          )} */}
 
           <p className="detail-desc">{product.description}</p>
 
