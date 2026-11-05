@@ -20,9 +20,9 @@ const MILESTONES = [
 function getStageIndex(status: string): number {
   const norm = (status || '').toUpperCase();
   if (norm === 'DELIVERED') return 3;
-  if (norm === 'PROCESSING' || norm === 'PAYMENT_SUCCESS') return 2;
+  if (norm === 'PROCESSING') return 2;
   if (norm === 'CONFIRMED') return 1;
-  if (norm === 'CREATED' || norm === 'PAYMENT_PENDING') return 0;
+  if (norm === 'CREATED') return 0;
   return -1; // CANCELLED or FAILED
 }
 
@@ -56,7 +56,7 @@ function getStatusBadge(status: string) {
       ),
     };
   }
-  if (norm === 'CONFIRMED' || norm === 'PAYMENT_SUCCESS') {
+  if (norm === 'CONFIRMED') {
     return {
       className: 'tracking-badge-confirmed',
       label: 'Confirmed',
@@ -68,7 +68,7 @@ function getStatusBadge(status: string) {
       ),
     };
   }
-  if (norm === 'CANCELLED' || norm === 'FAILED' || norm === 'PAYMENT_FAILED') {
+  if (norm === 'CANCELLED' || norm === 'FAILED') {
     return {
       className: 'tracking-badge-cancelled',
       label: norm.replace('_', ' '),
@@ -438,8 +438,6 @@ export default function OrderTrackingModal({ order, onClose, onStatusUpdated }: 
                         >
                           <option value="CREATED">CREATED</option>
                           <option value="CONFIRMED">CONFIRMED</option>
-                          <option value="PAYMENT_PENDING">PAYMENT_PENDING</option>
-                          <option value="PAYMENT_SUCCESS">PAYMENT_SUCCESS</option>
                           <option value="DELIVERED">DELIVERED</option>
                           <option value="CANCELLED">CANCELLED</option>
                           <option value="FAILED">FAILED</option>

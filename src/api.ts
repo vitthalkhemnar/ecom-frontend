@@ -266,6 +266,21 @@ export function createOrder(payload: CreateOrderRequest): Promise<Order> {
   });
 }
 
+export function confirmOrder(orderId: number | string): Promise<Order> {
+  return request<Order>(ORDER_BASE_URL, `/orders/${orderId}/confirm`, {
+    method: 'POST',
+    headers: authHeader(),
+  });
+}
+
+export function rollbackOrder(orderId: number | string, reason?: string): Promise<Order> {
+  const query = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+  return request<Order>(ORDER_BASE_URL, `/orders/${orderId}/rollback${query}`, {
+    method: 'POST',
+    headers: authHeader(),
+  });
+}
+
 export function getOrders(): Promise<Order[]> {
   return request<Order[]>(ORDER_BASE_URL, '/orders', {
     headers: authHeader(),

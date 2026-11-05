@@ -9,6 +9,8 @@ import {
   updateAddress,
   deleteAddress,
   createOrder,
+  confirmOrder,
+  rollbackOrder,
   createPaymentOrder,
   verifyPayment,
   getUserDetails,
@@ -130,6 +132,7 @@ export default function CheckoutAddressPage() {
     }
 
     setPlacingOrder(true);
+    orderPlacedRef.current = false;
 
     try {
       const userDetails = await getUserDetails();
@@ -137,10 +140,8 @@ export default function CheckoutAddressPage() {
 
       /*
        * STEP 1
-       * Create your normal application order first.
-       *
-       * This gives us the bookingId which will be passed
-       * to the Razorpay payment service as orderId.
+       * Create your normal application order first in CREATED state.
+       * (No confirmation email is sent here).
        */
       const order = await createOrder({
         totalAmount: totalPrice.toFixed(2),
@@ -148,13 +149,15 @@ export default function CheckoutAddressPage() {
         items: effectiveOrderItems,
       });
 
+      const currentOrderId = order.bookingId || (order as any).orderId;
+
       /*
        * STEP 2
        * Create Razorpay order using the bookingId.
        */
       const razorpayOrder = await createPaymentOrder({
         amount: totalPrice,
-        orderId: order.bookingId,
+        orderId: currentOrderId,
       });
 
       /*
@@ -170,7 +173,7 @@ export default function CheckoutAddressPage() {
 
         name: "Bazaar",
 
-        description: `Order #${order.bookingId}`,
+        description: `Order #${currentOrderId}`,
 
         order_id: razorpayOrder.id,
 
@@ -181,12 +184,11 @@ export default function CheckoutAddressPage() {
 
         handler: async (response: RazorpayPaymentResponse) => {
           orderPlacedRef.current = true;
-          const confirmedOrderId = order.bookingId || (order as any).orderId;
 
           try {
             /*
              * STEP 4
-             * Verify Razorpay payment on backend.
+             * Verify Razorpay payment signature on backend.
              */
             const isVerified = await verifyPayment({
               razorpayOrderId: response.razorpay_order_id,
@@ -195,13 +197,25 @@ export default function CheckoutAddressPage() {
             });
 
             if (!isVerified) {
-              toast.error("Payment verification failed.");
+              try {
+                await rollbackOrder(currentOrderId, "Payment verification signature mismatch");
+              } catch (rbErr) {
+                console.error("Order rollback error:", rbErr);
+              }
+              toast.error("Payment failed. Please try again.");
               return;
             }
 
             /*
+             * STEP 5
+             * Confirm order state to CONFIRMED.
+             * This triggers the order confirmation email via Kafka.
+             */
+            await confirmOrder(currentOrderId);
+
+            /*
              * STEP 6
-             * Remove purchased items from cart (non-blocking).
+             * Remove purchased items from cart only after confirmation.
              */
             try {
               for (const item of items) {
@@ -222,19 +236,31 @@ export default function CheckoutAddressPage() {
              * STEP 7
              * Navigate to order confirmation page.
              */
-            navigate(`/orders/${confirmedOrderId}`);
+            navigate(`/orders/${currentOrderId}`);
           } catch (error: unknown) {
             console.error("Payment verification/post-payment error:", error);
-            toast.error(getErrorMessage(error, "Payment was completed, but order processing failed."));
+            try {
+              await rollbackOrder(currentOrderId, "Post-payment processing failed");
+            } catch (rbErr) {
+              console.error("Order rollback error on catch:", rbErr);
+            }
+            toast.error("Payment failed. Please try again.");
           } finally {
             setPlacingOrder(false);
           }
         },
 
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
             setPlacingOrder(false);
-            toast("Payment cancelled.");
+            if (!orderPlacedRef.current) {
+              try {
+                await rollbackOrder(currentOrderId, "Payment cancelled by user");
+              } catch (rbErr) {
+                console.warn("Order rollback error on dismiss:", rbErr);
+              }
+              toast.error("Payment failed. Please try again.");
+            }
           },
         },
 
@@ -248,12 +274,23 @@ export default function CheckoutAddressPage() {
        * Create and open Razorpay popup.
        */
       const razorpay = new window.Razorpay(options);
+
+      razorpay.on('payment.failed', async function (response: any) {
+        setPlacingOrder(false);
+        if (!orderPlacedRef.current) {
+          try {
+            await rollbackOrder(currentOrderId, response?.error?.description || "Payment failed at gateway");
+          } catch (rbErr) {
+            console.warn("Order rollback error on payment.failed:", rbErr);
+          }
+          toast.error("Payment failed. Please try again.");
+        }
+      });
+
       razorpay.open();
     } catch (error: unknown) {
       console.error("Order/payment initialization failed:", error);
-
       toast.error(getErrorMessage(error, "Unable to start payment."));
-
       setPlacingOrder(false);
     }
   }
