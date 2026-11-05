@@ -4748,3 +4748,324 @@ button { font-family: inherit; cursor: pointer; }
   text-align: left;
   margin-top: 6px;
 }
+
+
+/* ==========================================================================
+   Interactive Variant Combination Selector (Size First, Color Below)
+   ========================================================================== */
+
+.product-variant-selector {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.variant-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.variant-option-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.variant-option-label {
+  font-weight: 600;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+}
+
+.variant-option-value {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Size Buttons */
+.size-options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.size-btn {
+  min-width: 44px;
+  height: 40px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.size-btn:hover {
+  border-color: var(--ink);
+}
+
+.size-btn.selected {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  box-shadow: 0 2px 6px rgba(23, 32, 58, 0.2);
+}
+
+.size-btn:disabled,
+.size-btn.disabled {
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1.5px dotted #94a3b8;
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.size-btn:disabled:hover,
+.size-btn.disabled:hover {
+  border: 1.5px dotted #94a3b8;
+  box-shadow: none;
+}
+
+/* Color Swatches */
+.color-options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.color-swatch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.color-swatch-btn:hover:not(:disabled) {
+  border-color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.color-swatch-btn.selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1.5px var(--ink);
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.color-swatch-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  border: 1.5px dotted #94a3b8;
+  background: #f8fafc;
+}
+
+.color-swatch-btn.disabled:hover {
+  border: 1.5px dotted #94a3b8;
+  transform: none;
+  box-shadow: none;
+}
+
+.color-swatch-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.12);
+}
+
+.color-swatch-btn.light .color-swatch-circle {
+  border: 1.5px solid #cbd5e1;
+}
+
+.color-swatch-name {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.color-swatch-btn.disabled .color-swatch-name {
+  color: #94a3b8;
+}
+
+/* Selected Variant Summary & Action Box */
+.selected-variant-summary {
+  margin-top: 10px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.variant-summary-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.variant-summary-primary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.variant-summary-price {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.variant-summary-sku {
+  font-size: 12px;
+  color: var(--slate);
+  font-family: var(--font-mono);
+}
+
+.variant-summary-sku code {
+  background: var(--sand);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11.5px;
+}
+
+.variant-stock-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.variant-stock-badge.in {
+  background: rgba(63, 125, 88, 0.12);
+  color: var(--leaf);
+}
+
+.variant-stock-badge.low {
+  background: rgba(232, 135, 30, 0.14);
+  color: var(--mango-deep);
+}
+
+.variant-stock-badge.out {
+  background: rgba(196, 67, 43, 0.12);
+  color: var(--rust);
+}
+
+.variant-spec-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--sand);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.variant-action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.variant-qty-selector {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  background: var(--sand);
+  overflow: hidden;
+  height: 42px;
+}
+
+.qty-btn {
+  width: 38px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.qty-number {
+  min-width: 36px;
+  text-align: center;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.variant-add-cart-btn {
+  flex: 1;
+  min-height: 42px;
+  min-width: 160px;
+  background: var(--ink);
+  color: var(--sand);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.variant-add-cart-btn:hover:not(:disabled) {
+  background: var(--ink-soft);
+}
+
+.variant-add-cart-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #64748b;
+}
+
+.variant-unavailable-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: rgba(196, 67, 43, 0.08);
+  color: var(--rust);
+  font-size: 13.5px;
+  font-weight: 500;
+}

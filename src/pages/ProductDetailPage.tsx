@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import VariantCard from '../components/VariantCard';
+import ProductVariantSelector from '../components/ProductVariantSelector';
 import { getProductById, getVariants, formatINR, cleanValue } from '../api';
 import type { Product, Variant } from '../types';
 
@@ -10,6 +10,7 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [imageError, setImageError] = useState(false);
 
@@ -75,7 +76,13 @@ export default function ProductDetailPage() {
     return Boolean(cleanValue(String(value)));
   });
   const hasMaterial = Boolean(cleanValue(product.material));
-  const image = !imageError && product.images && product.images.length > 0 ? product.images[0] : null;
+  const categoryNorm = (product.category || '').trim().toLowerCase();
+  
+  // Display variant-specific image if available, else product image
+  const variantImage = selectedVariant?.image ? cleanValue(selectedVariant.image) : null;
+  const primaryImage = variantImage || (product.images && product.images.length > 0 ? product.images[0] : null);
+  const image = !imageError && primaryImage ? primaryImage : null;
+  const displayPrice = selectedVariant?.price ?? product.price;
 
   return (
     <div className="page">
@@ -83,6 +90,7 @@ export default function ProductDetailPage() {
         <div className="detail-media">
           {image ? (
             <img
+              key={image}
               src={image}
               alt={product.productName}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
@@ -99,7 +107,7 @@ export default function ProductDetailPage() {
           <div className="detail-brand">{product.brand}</div>
 
           <div className="detail-price-row">
-            <span className="detail-price-now">{formatINR(product.price)}</span>
+            <span className="detail-price-now">{formatINR(displayPrice)}</span>
           </div>
 
           <p className="detail-desc">{product.description}</p>
@@ -121,17 +129,14 @@ export default function ProductDetailPage() {
             </dl>
           )}
 
-          <h2 className="section-label" style={{ marginBottom: '14px' }}>Available variants</h2>
-
-          {variants.length === 0 ? (
-            <p className="state-msg">No variants listed for this product yet.</p>
-          ) : (
-            <div className="variant-list">
-              {variants.map((variant) => (
-                <VariantCard key={variant.variantId} variant={variant} />
-              ))}
-            </div>
-          )}
+          <ProductVariantSelector
+            product={product}
+            variants={variants}
+            onVariantChange={(variant) => {
+              setSelectedVariant(variant);
+              setImageError(false);
+            }}
+          />
         </div>
       </div>
     </div>
